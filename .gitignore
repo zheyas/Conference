@@ -1,0 +1,11 @@
+.env
+*.pyc
+__pycache__/
+db_data/
+media/
+staticfiles/
+.env.local
+.env.*.local
+.venv
+.__idea__
+*.sqlite3

@@ -1,0 +1,363 @@
+<!-- conference_admin/manage_section_jury.html -->
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Управление членами жюри - Администрирование{% endblock %}
+{% block page_title %}Управление членами жюри секции "{{ section.name }}"{% endblock %}
+{% block page_subtitle %}Добавление и удаление членов жюри{% endblock %}
+
+{% block extra_css %}
+<style>
+    .jury-member-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .jury-member-card:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+    .jury-member-info {
+        flex: 1;
+    }
+    .jury-member-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .jury-member-details {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    .delete-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+    }
+    .delete-btn:hover {
+        background-color: #fef2f2;
+    }
+    .draggable {
+        cursor: move;
+    }
+    .dragging {
+        opacity: 0.5;
+        background-color: #f0f9ff;
+    }
+    .user-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .user-card:hover {
+        background-color: #f0f9ff;
+        border-color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Навигация -->
+    <div class="flex items-center space-x-4 mb-6">
+        <a href="{% url 'conference_admin:manage_sections' %}" class="text-blue-600 hover:text-blue-800">
+            ← Назад к списку секций
+        </a>
+        <span class="text-gray-400">|</span>
+        <a href="{% url 'conference_admin:report_list' %}?section={{ section.id }}"
+           class="text-blue-600 hover:text-blue-800">
+            📄 Доклады этой секции
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Левая колонка: Список членов жюри -->
+        <div class="stat-card">
+            <h2 class="text-lg font-bold mb-4 text-gray-800">Члены жюри ({{ jury_members.count }})</h2>
+
+            {% if jury_members %}
+            <div id="juryMembersList" class="mb-4">
+                {% for member in jury_members %}
+                <div class="jury-member-card draggable" data-id="{{ member.id }}">
+                    <div class="jury-member-info">
+                        <div class="jury-member-name">
+                            {{ member.get_full_name }}
+                            {% if member.user %}
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded ml-2">
+                                пользователь
+                            </span>
+                            {% else %}
+                            <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded ml-2">
+                                внешний
+                            </span>
+                            {% endif %}
+                            <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded ml-2">
+                                №{{ member.order }}
+                            </span>
+                        </div>
+                        <div class="jury-member-details">
+                            {% if member.organization %}{{ member.organization }}{% endif %}
+                            {% if member.position %}, {{ member.position }}{% endif %}
+                            {% if member.academic_degree %}, {{ member.academic_degree }}{% endif %}
+                        </div>
+                        {% if member.email %}
+                        <div class="text-xs text-gray-500 mt-1">
+                            ✉️ {{ member.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <form method="post" onsubmit="return confirm('Удалить {{ member.get_full_name }} из членов жюри?')" class="ml-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_jury_member">
+                        <input type="hidden" name="member_id" value="{{ member.id }}">
+                        <button type="submit" class="delete-btn" title="Удалить">
+                            ✕
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form method="post" id="reorderForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reorder_jury_members">
+                <input type="hidden" name="order_data" id="orderData">
+                <button type="submit" class="btn-admin">
+                    Сохранить порядок
+                </button>
+                <span class="text-sm text-gray-500 ml-3">
+                    Перетащите для изменения порядка
+                </span>
+            </form>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-500">В этой секции пока нет членов жюри</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Правая колонка: Добавление нового члена жюри -->
+        <div class="space-y-6">
+            <!-- Форма добавления вручную -->
+            <div class="stat-card">
+                <h2 class="text-lg font-bold mb-4 text-gray-800">Добавить члена жюри</h2>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_jury_member">
+
+                    <div class="space-y-4">
+                        <div class="border-b pb-4">
+                            <h3 class="font-medium text-gray-700 mb-3">Выбрать пользователя системы</h3>
+                            {{ form.user }}
+                            <p class="text-xs text-gray-500 mt-2">
+                                ИЛИ заполните поля ниже для внешнего члена жюри
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Фамилия *</label>
+                                {{ form.last_name }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Отчество</label>
+                                {{ form.middle_name }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Организация</label>
+                                {{ form.organization }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Должность</label>
+                                {{ form.position }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ученая степень</label>
+                                {{ form.academic_degree }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ученое звание</label>
+                                {{ form.academic_title }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                {{ form.email }}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                                {{ form.phone }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Порядковый номер</label>
+                            {{ form.order }}
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="btn-admin w-full">
+                                Добавить члена жюри
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Поиск пользователей -->
+            <div class="stat-card">
+                <h2 class="text-lg font-bold mb-4 text-gray-800">Поиск пользователей</h2>
+
+                <form method="get" class="mb-4">
+                    {{ search_form.search }}
+                    <button type="submit" class="btn-admin mt-2 w-full">
+                        🔍 Найти пользователей
+                    </button>
+                </form>
+
+                {% if users %}
+                <div class="mt-4">
+                    <h3 class="font-medium text-gray-700 mb-3">Найденные пользователи:</h3>
+                    {% for user in users %}
+                    <div class="user-card">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">{{ user.get_full_name }}</div>
+                                <div class="text-sm text-gray-600">{{ user.email }}</div>
+                                {% if user.organization %}
+                                <div class="text-sm text-gray-500">{{ user.organization }}</div>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'conference_admin:add_user_to_jury' section_id=section.id user_id=user.id %}"
+                               class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                                Добавить
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif search_form.is_bound %}
+                <div class="text-center py-4 text-gray-500">
+                    Пользователи не найдены или уже добавлены в члены жюри
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Перетаскивание для изменения порядка
+let draggedItem = null;
+
+document.querySelectorAll('.draggable').forEach(item => {
+    item.setAttribute('draggable', true);
+
+    item.addEventListener('dragstart', function(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    item.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+        draggedItem = null;
+        updateOrder();
+    });
+});
+
+document.getElementById('juryMembersList').addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    const afterElement = getDragAfterElement(this, e.clientY);
+    const draggable = document.querySelector('.dragging');
+
+    if (afterElement == null) {
+        this.appendChild(draggable);
+    } else {
+        this.insertBefore(draggable, afterElement);
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function updateOrder() {
+    const items = document.querySelectorAll('#juryMembersList .draggable');
+    const orderData = [];
+
+    items.forEach((item, index) => {
+        const id = item.getAttribute('data-id');
+        orderData.push({
+            id: id,
+            order: index + 1
+        });
+    });
+
+    document.getElementById('orderData').value = JSON.stringify(orderData);
+}
+
+// Инициализация порядка при загрузке
+updateOrder();
+
+// Автоматическое заполнение полей при выборе пользователя
+document.querySelector('[name="user"]').addEventListener('change', function() {
+    const userId = this.value;
+    if (userId) {
+        // Можно добавить AJAX запрос для получения данных пользователя
+        // и автоматического заполнения полей
+        document.querySelector('[name="last_name"]').value = '';
+        document.querySelector('[name="first_name"]').value = '';
+        document.querySelector('[name="middle_name"]').value = '';
+        document.querySelector('[name="organization"]').value = '';
+    }
+});
+
+// Очистка выбора пользователя при заполнении полей вручную
+const manualFields = ['last_name', 'first_name', 'middle_name'];
+manualFields.forEach(fieldName => {
+    document.querySelector(`[name="${fieldName}"]`).addEventListener('input', function() {
+        if (this.value.trim()) {
+            document.querySelector('[name="user"]').value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

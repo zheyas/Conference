@@ -1,0 +1,135 @@
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Добавить рецензию - Администрирование{% endblock %}
+{% block page_title %}Добавление рецензии{% endblock %}
+{% block page_subtitle %}Рецензирование доклада: {{ report.title|truncatechars:50 }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="stat-card">
+        <div class="mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Доклад для рецензирования</h2>
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="font-medium">{{ report.title }}</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    Авторы:
+                    {% for author_report in report.author_reports.all|slice:":3" %}
+                    {{ author_report.author.get_short_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    {% if report.author_reports.count > 3 %}и другие{% endif %}
+                </div>
+                <div class="mt-2">
+                    <a href="{{ report.report_file.url }}" target="_blank"
+                       class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                        📄 Открыть текст доклада
+                    </a>
+                    {% if report.presentation_file %}
+                    <a href="{{ report.presentation_file.url }}" target="_blank"
+                       class="inline-flex items-center text-blue-600 hover:text-blue-800 ml-4">
+                        🎓 Открыть презентацию
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="space-y-6">
+                <!-- Оценки -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Оценка по критериям</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Оригинальность</label>
+                            {{ form.score_originality }}
+                            <p class="text-xs text-gray-500 mt-1">1 - низкая, 5 - высокая</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Актуальность</label>
+                            {{ form.score_relevance }}
+                            <p class="text-xs text-gray-500 mt-1">1 - низкая, 5 - высокая</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Методология</label>
+                            {{ form.score_methodology }}
+                            <p class="text-xs text-gray-500 mt-1">1 - слабая, 5 - сильная</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Презентация</label>
+                            {{ form.score_presentation }}
+                            <p class="text-xs text-gray-500 mt-1">1 - плохая, 5 - отличная</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Качество</label>
+                            {{ form.score_quality }}
+                            <p class="text-xs text-gray-500 mt-1">1 - низкое, 5 - высокое</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Статус рецензии -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Рекомендация</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус рецензии</label>
+                            {{ form.status }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Подтверждение</label>
+                            <div class="flex items-center mt-2">
+                                {{ form.is_confirmed }}
+                                <label for="{{ form.is_confirmed.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                    Рецензия подтверждена и готова к публикации
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Комментарии -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Комментарии</h3>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Комментарий для автора *
+                            </label>
+                            <p class="text-xs text-gray-500 mb-2">
+                                Конструктивные замечания и предложения для улучшения работы.
+                                Будет показан автору доклада.
+                            </p>
+                            {{ form.comment_for_author }}
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Комментарий для комитета (опционально)
+                            </label>
+                            <p class="text-xs text-gray-500 mb-2">
+                                Внутренний комментарий для программного комитета.
+                                Не будет показан автору.
+                            </p>
+                            {{ form.comment_for_committee }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-between pt-6 border-t border-gray-200">
+                    <a href="{% url 'conference_admin:report_detail' report.id %}"
+                       class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Отмена
+                    </a>
+                    <button type="submit" class="btn-admin px-8 py-3">
+                        Сохранить рецензию
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

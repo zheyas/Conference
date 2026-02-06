@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-draft {
+        background-color: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .status-submitted {
+        background-color: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+    }
+
+    .status-review {
+        background-color: #ffedd5;
+        color: #9a3412;
+        border: 1px solid #fdba74;
+    }
+
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status-rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    .report-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+        backdrop-filter: blur(10px);
+    }
+
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+        border-color: #3b82f6;
+    }
+
+    .file-info {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .empty-state {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 60px 40px;
+        text-align: center;
+    }
+
+    .author-chip {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #a7f3d0;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #065f46;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    .action-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        color: white;
+    }
+
+    .section-badge {
+        background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        color: white;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Заголовок -->
+        <div class="mb-12 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 mb-6 shadow-xl">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Мои доклады</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Здесь вы можете управлять своими докладами, подавать новые и отслеживать их статус
+            </p>
+        </div>
+
+        <!-- Кнопка создания нового доклада -->
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <a href="{% url 'report_create' %}" class="action-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Создать новый доклад
+                </a>
+            </div>
+
+            <!-- Статистика -->
+            <div class="flex items-center gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ reports|length }}</div>
+                    <div class="text-sm text-gray-500">Всего докладов</div>
+                </div>
+                {% if reports %}
+                    {% with approved=reports|dictsortreversed:"status"|first %}
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">
+                            {{ reports|dictsort:"status"|first }}
+                        </div>
+                        <div class="text-sm text-gray-500">Одобрено</div>
+                    </div>
+                    {% endwith %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if reports %}
+            <!-- Список докладов -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {% for report in reports %}
+                <div class="report-card p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="status-badge status-{{ report.status }}">
+                                {{ report.get_status_display }}
+                            </span>
+                            {% if report.section %}
+                            <span class="section-badge ml-2">
+                                {{ report.section.name|truncatechars:20 }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            {{ report.created_at|date:"d.m.Y" }}
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
+                        <a href="{% url 'report_detail' report.id %}">
+                            {{ report.title|truncatechars:80 }}
+                        </a>
+                    </h3>
+
+                    <p class="text-gray-600 mb-4 line-clamp-2">
+                        {{ report.abstract|truncatechars:150|default:"Без аннотации" }}
+                    </p>
+
+                    <!-- Авторы -->
+                    <div class="mb-4">
+                        {% for author_report in report.author_reports.all|slice:":3" %}
+                        <span class="author-chip">
+                            {{ author_report.author.get_full_name|truncatechars:20 }}
+                            {% if author_report.is_main_author %}
+                            <svg class="w-4 h-4 ml-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {% endif %}
+                        </span>
+                        {% endfor %}
+                        {% if report.author_reports.count > 3 %}
+                        <span class="author-chip">
+                            +{{ report.author_reports.count|add:"-3" }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Информация о файлах -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            {% if report.report_file %}
+                            <div class="file-info">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>{{ report.report_file.name|slice:"-3:"|upper }}</span>
+                                <span class="text-gray-500">•</span>
+                                <span>{{ report.get_file_size }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if report.presentation_file %}
+                            <div class="file-info">
+                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                                </svg>
+                                <span>Презентация</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Действия -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <a href="{% url 'report_detail' report.id %}"
+                               class="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Просмотр
+                            </a>
+
+                            {% if report.created_by == user %}
+                            <a href="{% url 'report_edit' report.id %}"
+                               class="text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Редактировать
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        {% if report.status == 'draft' %}
+                        <form method="post" action="{% url 'report_edit_authors' report.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="submit"
+                                    class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-shadow text-sm">
+                                Отправить на проверку
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Состояние пустого списка -->
+            <div class="empty-state">
+                <div class="mb-6">
+                    <div class="w-24 h-24 mx-auto bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">У вас пока нет докладов</h3>
+                    <p class="text-gray-600 max-w-md mx-auto">
+                        Создайте свой первый доклад для участия в конференции
+                    </p>
+                </div>
+                <a href="{% url 'report_create' %}" class="action-btn inline-block">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Создать первый доклад
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Анимация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.report-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

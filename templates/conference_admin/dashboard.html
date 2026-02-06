@@ -1,0 +1,181 @@
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Панель управления - Администратор{% endblock %}
+{% block page_title %}Панель управления{% endblock %}
+{% block page_subtitle %}Обзор конференции и быстрые действия{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Быстрые действия -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'conference_admin:report_list' %}?status=submitted"
+           class="stat-card hover:shadow-lg">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-yellow-100 text-yellow-800 mr-4">
+                    <span class="text-2xl">⏳</span>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Новые доклады</div>
+                    <div class="text-2xl font-bold">{{ stats.submitted_reports }}</div>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'conference_admin:report_list' %}?status=review"
+           class="stat-card hover:shadow-lg">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-blue-100 text-blue-800 mr-4">
+                    <span class="text-2xl">📝</span>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">На рецензии</div>
+                    <div class="text-2xl font-bold">{{ stats.under_review }}</div>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'conference_admin:report_list' %}?status=approved"
+           class="stat-card hover:shadow-lg">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-green-100 text-green-800 mr-4">
+                    <span class="text-2xl">✅</span>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Одобрено</div>
+                    <div class="text-2xl font-bold">{{ stats.approved_reports }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Две колонки -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Последние доклады -->
+        <div class="stat-card">
+            <h2 class="text-lg font-bold mb-4 text-gray-800">Последние доклады</h2>
+            <div class="space-y-3">
+                {% for report in recent_reports %}
+                <a href="{% url 'conference_admin:report_detail' report.id %}"
+                   class="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-800 truncate">{{ report.title }}</h3>
+                            <div class="flex items-center mt-1 space-x-2">
+                                <span class="text-xs text-gray-500">
+                                    {{ report.created_at|date:"d.m.Y H:i" }}
+                                </span>
+                                <span class="badge-status badge-{{ report.status }}">
+                                    {{ report.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="text-gray-400 ml-2">→</span>
+                    </div>
+                </a>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">Нет новых докладов</p>
+                {% endfor %}
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <a href="{% url 'conference_admin:report_list' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    Все доклады →
+                </a>
+            </div>
+        </div>
+
+        <!-- Требуют внимания -->
+        <div class="stat-card">
+            <h2 class="text-lg font-bold mb-4 text-gray-800">Требуют внимания</h2>
+            <div class="space-y-3">
+                {% for report in attention_reports %}
+                <div class="p-3 border border-yellow-200 rounded-lg bg-yellow-50">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-800 truncate">{{ report.title }}</h3>
+                            <div class="mt-2">
+                                {% if report.status == 'submitted' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    ⚠️ Ожидает рецензента
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    📝 Нет рецензий
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="{% url 'conference_admin:create_review' report.id %}"
+                               class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                                Рецензия
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">Все доклады обработаны</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Общая статистика</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center p-4 border border-gray-200 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">{{ stats.total_reports }}</div>
+                <div class="text-sm text-gray-500">Всего докладов</div>
+            </div>
+            <div class="text-center p-4 border border-gray-200 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">{{ stats.total_authors }}</div>
+                <div class="text-sm text-gray-500">Авторов</div>
+            </div>
+            <div class="text-center p-4 border border-gray-200 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">{{ stats.pending_reviews }}</div>
+                <div class="text-sm text-gray-500">Ожидает рецензий</div>
+            </div>
+            <div class="text-center p-4 border border-gray-200 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">{{ stats.total_certificates }}</div>
+                <div class="text-sm text-gray-500">Сертификатов</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Последние рецензии -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Последние рецензии</h2>
+        <div class="space-y-3">
+            {% for review in recent_reviews %}
+            <div class="p-3 border border-gray-200 rounded-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <div class="font-medium">{{ review.reviewer.get_full_name }}</div>
+                        <div class="text-sm text-gray-500">
+                            {{ review.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 rounded text-xs font-medium
+                            {% if review.status == 'accepted' %}bg-green-100 text-green-800
+                            {% elif review.status == 'rejected' %}bg-red-100 text-red-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ review.get_status_display }}
+                        </span>
+                        <a href="{% url 'conference_admin:report_detail' review.report.id %}"
+                           class="text-blue-600 hover:text-blue-800 text-sm">
+                            к докладу →
+                        </a>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600 truncate">
+                    {{ review.comment_for_author|truncatechars:100 }}
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">Рецензий пока нет</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

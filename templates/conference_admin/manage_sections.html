@@ -1,0 +1,354 @@
+<!-- manage_sections.html -->
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Управление секциями - Администрирование{% endblock %}
+{% block page_title %}Управление секциями конференции{% endblock %}
+{% block page_subtitle %}Создание, редактирование и удаление секций{% endblock %}
+
+{% block extra_css %}
+<style>
+    .icon-preview {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+    }
+    .section-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s ease;
+    }
+    .section-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Сообщения об успехе/ошибках -->
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% elif message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Форма добавления секции -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Добавить новую секцию</h2>
+
+        <!-- Отображение ошибок формы -->
+        {% if form.errors %}
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h3 class="font-medium text-red-800 mb-2">Ошибки в форме:</h3>
+            <ul class="mt-1 space-y-1">
+                {% for field in form %}
+                    {% if field.errors %}
+                    <li class="text-sm text-red-700">
+                        <span class="font-medium">{{ field.label }}:</span>
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if form.non_field_errors %}
+                <li class="text-sm text-red-700">
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название секции *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Дата проведения *</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Время начала *</label>
+                    {{ form.time }}
+                    {% if form.time.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.time.errors }}</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Место проведения *</label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.location.errors }}</div>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Иконка/логотип</label>
+                    {{ form.icon }}
+                    {% if form.icon.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.icon.errors }}</div>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Рекомендуемый размер: 200×200px. Поддерживаемые форматы: JPG, PNG, SVG
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Председатель жюри</label>
+                    {{ form.jury_chairman }}
+                    {% if form.jury_chairman.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.jury_chairman.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание секции *</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" name="add_section" class="btn-admin px-6 py-3">
+                    Добавить секцию
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список секций -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">
+            Существующие секции
+            {% if sections %}<span class="text-sm font-normal text-gray-600">({{ sections|length }})</span>{% endif %}
+        </h2>
+
+        {% if sections %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for section in sections %}
+            <div class="section-card">
+                <div class="flex items-start mb-4">
+                    {% if section.icon %}
+                    <img src="{{ section.icon.url }}" alt="{{ section.name }}" class="icon-preview mr-4">
+                    {% else %}
+                    <div class="icon-preview bg-gray-100 flex items-center justify-center mr-4">
+                        <span class="text-gray-400 text-xs">Нет иконки</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800">{{ section.name }}</h3>
+                        <div class="text-sm text-gray-600 mt-1">
+                            📅 {{ section.date|date:"d.m.Y" }} ⏰ {{ section.time|time:"H:i" }}
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            📍 {{ section.location }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-700 mb-3">
+                    {{ section.description|truncatechars:120 }}
+                </div>
+
+                {% if section.jury_chairman %}
+                <div class="text-sm text-gray-600 mb-2">
+                    <span class="font-medium">Председатель жюри:</span>
+                    {{ section.jury_chairman.get_full_name }}
+                </div>
+                {% endif %}
+
+                <!-- Информация о членах жюри -->
+                {% with jury_count=section.jury_members_list.count %}
+                {% if jury_count > 0 %}
+                <div class="text-sm text-gray-600 mb-2">
+                    <span class="font-medium">Членов жюри:</span>
+                    {{ jury_count }}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <div class="flex items-center justify-between mt-3">
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                        {{ section.reports.count }} докладов
+                    </span>
+                    <div class="flex space-x-2">
+                        <!-- Кнопка для управления членами жюри -->
+                        <a href="{% url 'conference_admin:manage_section_jury' section_id=section.id %}"
+                           class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+                            👥 Члены жюри
+                        </a>
+                        <button onclick="editSection('{{ section.id }}')"
+                                class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                            Редактировать
+                        </button>
+                        <form method="post" onsubmit="return confirm('Удалить секцию «{{ section.name }}»?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="section_id" value="{{ section.id }}">
+                            <button type="submit" name="delete_section"
+                                    class="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
+                                Удалить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+            <div class="text-gray-400 mb-2">
+                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+            </div>
+            <p class="text-gray-500">Секции еще не созданы</p>
+            <p class="text-sm text-gray-400 mt-1">Создайте первую секцию с помощью формы выше</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования -->
+<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+        <div class="mt-3">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Редактировать секцию</h3>
+            <form method="post" enctype="multipart/form-data" id="editForm">
+                {% csrf_token %}
+                <input type="hidden" name="section_id" id="editSectionId">
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Название секции *</label>
+                        <input type="text" name="name" id="editName" class="input-field" required>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата проведения *</label>
+                            <input type="date" name="date" id="editDate" class="input-field" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Время начала *</label>
+                            <input type="time" name="time" id="editTime" class="input-field" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Место проведения *</label>
+                        <input type="text" name="location" id="editLocation" class="input-field" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Описание *</label>
+                        <textarea name="description" id="editDescription" rows="4" class="input-field" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Иконка/логотип</label>
+                        <input type="file" name="icon" id="editIcon" class="input-field" accept="image/*">
+                        <p class="text-xs text-gray-500 mt-1">Оставьте пустым, чтобы сохранить текущую иконку</p>
+                        <div id="currentIcon" class="mt-2"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Председатель жюри</label>
+                        <select name="jury_chairman" id="editJuryChairman" class="input-field">
+                            <option value="">Не выбрано</option>
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeEditModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Отмена
+                    </button>
+                    <button type="submit" name="edit_section"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editSection(sectionId) {
+    // Загружаем данные секции через AJAX
+    fetch(`/conference-admin/sections/${sectionId}/data/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editSectionId').value = sectionId;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editDescription').value = data.description;
+            document.getElementById('editDate').value = data.date;
+            document.getElementById('editTime').value = data.time;
+            document.getElementById('editLocation').value = data.location;
+            document.getElementById('editJuryChairman').value = data.jury_chairman || '';
+
+            // Показываем текущую иконку
+            const currentIconDiv = document.getElementById('currentIcon');
+            if (data.icon_url) {
+                currentIconDiv.innerHTML = `
+                    <p class="text-sm text-gray-600 mb-1">Текущая иконка:</p>
+                    <img src="${data.icon_url}" alt="Иконка" class="icon-preview">
+                `;
+            } else {
+                currentIconDiv.innerHTML = '<p class="text-sm text-gray-600">Нет текущей иконки</p>';
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при загрузке данных секции');
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+// Закрытие модального окна при клике вне его
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+// Автоматическое скрытие сообщений через 5 секунд
+setTimeout(function() {
+    const messages = document.querySelectorAll('[class*="bg-"]');
+    messages.forEach(function(message) {
+        message.style.transition = 'opacity 0.5s';
+        message.style.opacity = '0';
+        setTimeout(function() {
+            message.style.display = 'none';
+        }, 500);
+    });
+}, 5000);
+</script>
+{% endblock %}

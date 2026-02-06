@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}IT-Весна 2026 - ОГУ - Главная{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="w-full futuristic-gradient py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="max-w-4xl">
+            <div class="info-badge inline-block mb-6">
+                <span class="font-semibold">Научная конференция • 15-17 мая 2026</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">IT-Весна 2026</h1>
+            <p class="text-2xl mb-6 font-medium" style="color: rgba(255, 255, 255, 0.95);">Студенческая научно-техническая конференция</p>
+            <div class="flex flex-wrap gap-8 items-center mb-10" style="color: rgba(255, 255, 255, 0.9);">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z" />
+                    </svg>
+                    <span class="font-semibold">15-17 мая 2026</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <svg class="w-6 h-6" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                    </svg>
+                    <span class="font-semibold">Главный корпус ОГУ</span>
+                </div>
+            </div>
+            <p class="text-xl mb-10 leading-relaxed max-w-3xl" style="color: rgba(255, 255, 255, 0.9);">
+                Ежегодная студенческая конференция для молодых исследователей и разработчиков в области информационных технологий.
+                Представьте свои проекты, исследования и инновационные идеи научному сообществу.
+            </p>
+            {% if user.is_authenticated %}
+            <div class="flex space-x-4">
+                <a href="{% url 'report_list' %}" class="btn-sea px-8 py-3 text-lg">Мои доклады</a>
+                <a href="{% url 'report_create' %}" class="btn-neon px-8 py-3 text-lg">Подать доклад</a>
+            </div>
+            {% else %}
+            <div class="flex space-x-4">
+                <a href="{% url 'login' %}" class="btn-sea px-8 py-3 text-lg">Войти в систему</a>
+                <a href="{% url 'register' %}" class="btn-neon px-8 py-3 text-lg">Зарегистрироваться</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Tracks Section -->
+<section class="w-full py-16 md:py-24" style="background-color: var(--color-white);">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="section-title">
+            <h2 class="text-4xl font-black mb-2" style="color: var(--color-dark);">Секции конференции</h2>
+            <p class="text-lg" style="color: var(--color-light);">Выберите направление для вашего доклада</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for section in sections %}
+            <div class="track-card card-shadow bg-white p-8">
+                <div class="track-icon mb-4">
+                    {% if section.icon %}
+                    <img src="{{ section.icon.url }}" alt="{{ section.name }}"
+                         class="w-20 h-20 mx-auto object-cover rounded-lg">
+                    {% else %}
+                    <div class="w-20 h-20 mx-auto bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span class="text-3xl">📄</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <h3 class="text-xl font-bold mb-3 text-center" style="color: var(--color-dark);">
+                    {{ section.name }}
+                </h3>
+
+                <div class="text-center text-sm text-gray-600 mb-4">
+                    <div class="mb-1">
+                        <span class="font-medium">📅 Дата:</span>
+                        {{ section.date|date:"d.m.Y" }}
+                    </div>
+                    <div class="mb-1">
+                        <span class="font-medium">⏰ Время:</span>
+                        {{ section.time|time:"H:i" }}
+                    </div>
+                    <div>
+                        <span class="font-medium">📍 Место:</span>
+                        {{ section.location }}
+                    </div>
+                </div>
+
+                {% if section.description %}
+                <p class="text-center text-sm leading-relaxed mb-4" style="color: var(--color-light);">
+                    {{ section.description|truncatechars:150 }}
+                </p>
+                {% endif %}
+
+                {% if section.jury_chairman %}
+                <div class="text-center text-xs text-gray-500 mt-3 pt-3 border-t border-gray-100">
+                    <div class="font-medium">Председатель жюри:</div>
+                    <div>{{ section.jury_chairman.get_full_name }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p class="text-lg" style="color: var(--color-light);">Секции еще не добавлены</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Info Section -->
+<section class="w-full py-16 md:py-20" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4" style="color: var(--color-neon);">Участие в конференции</h2>
+                <p class="text-lg" style="color: var(--color-light); max-width: 600px; margin: 0 auto;">
+                    Для участия в конференции необходимо подать тезисы доклада через личный кабинет на сайте ОГУ
+                </p>
+            </div>
+
+            <div class="card-shadow p-8" style="background: var(--color-dark); border: 1px solid rgba(78, 255, 255, 0.1);">
+                <div class="flex items-start space-x-4 mb-6">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background-color: rgba(78, 255, 255, 0.1);">
+                        <span style="color: var(--color-neon);">📅</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-2" style="color: var(--color-neon);">Важные даты</h3>
+                        <ul class="space-y-3" style="color: var(--color-light);">
+                            <li class="flex items-center space-x-3">
+                                <span class="font-medium" style="color: var(--color-neon);">До 1 апреля 2026</span>
+                                <span>— Подача тезисов докладов</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <span class="font-medium" style="color: var(--color-neon);">15 апреля 2026</span>
+                                <span>— Уведомление о принятии</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <span class="font-medium" style="color: var(--color-neon);">15-17 мая 2026</span>
+                                <span>— Проведение конференции</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-800 pt-8">
+                    <div class="flex justify-center">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'report_create' %}" class="btn-neon px-8 py-3 text-lg">
+                            Подать доклад
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="btn-neon px-8 py-3 text-lg">
+                            Войти для подачи доклада
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

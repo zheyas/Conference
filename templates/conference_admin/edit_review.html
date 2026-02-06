@@ -1,0 +1,140 @@
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Редактирование рецензии - Администрирование{% endblock %}
+{% block page_title %}Редактирование рецензии{% endblock %}
+{% block page_subtitle %}Доклад: {{ review.report.title|truncatechars:50 }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="stat-card">
+        <div class="mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Рецензия</h2>
+                    <div class="text-sm text-gray-600">
+                        Рецензент: {{ review.reviewer.get_full_name }} |
+                        Создана: {{ review.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+                <a href="{% url 'conference_admin:report_detail' review.report.id %}"
+                   class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Назад к докладу
+                </a>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="space-y-6">
+                <!-- Оценки -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Оценка по критериям</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Оригинальность</label>
+                            {{ form.score_originality }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Актуальность</label>
+                            {{ form.score_relevance }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Методология</label>
+                            {{ form.score_methodology }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Презентация</label>
+                            {{ form.score_presentation }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Качество</label>
+                            {{ form.score_quality }}
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <span class="px-4 py-2 bg-gray-100 rounded-lg">
+                            Итого: <span id="totalScore">{{ review.total_score }}</span>/25
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Статус рецензии -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Рекомендация</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус рецензии</label>
+                            {{ form.status }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Подтверждение</label>
+                            <div class="flex items-center mt-2">
+                                {{ form.is_confirmed }}
+                                <label for="{{ form.is_confirmed.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                    Рецензия подтверждена
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Комментарии -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Комментарии</h3>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Комментарий для автора
+                            </label>
+                            {{ form.comment_for_author }}
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Комментарий для комитета
+                            </label>
+                            {{ form.comment_for_committee }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-between pt-6 border-t border-gray-200">
+                    <a href="{% url 'conference_admin:report_detail' review.report.id %}"
+                       class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Отмена
+                    </a>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="btn-admin px-8 py-3">
+                            Сохранить изменения
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Обновление итогового балла при изменении оценок
+function updateTotalScore() {
+    const scores = [
+        parseInt(document.querySelector('#{{ form.score_originality.id_for_label }}').value) || 0,
+        parseInt(document.querySelector('#{{ form.score_relevance.id_for_label }}').value) || 0,
+        parseInt(document.querySelector('#{{ form.score_methodology.id_for_label }}').value) || 0,
+        parseInt(document.querySelector('#{{ form.score_presentation.id_for_label }}').value) || 0,
+        parseInt(document.querySelector('#{{ form.score_quality.id_for_label }}').value) || 0
+    ];
+    const total = scores.reduce((a, b) => a + b, 0);
+    document.getElementById('totalScore').textContent = total;
+}
+
+// Добавляем обработчики на все поля оценок
+document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', updateTotalScore);
+    input.addEventListener('change', updateTotalScore);
+});
+</script>
+{% endblock %}

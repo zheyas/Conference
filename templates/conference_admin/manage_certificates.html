@@ -1,0 +1,159 @@
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Управление грамотами - Администрирование{% endblock %}
+{% block page_title %}Управление грамотами и сертификатами{% endblock %}
+{% block page_subtitle %}Доклад: {{ report.title|truncatechars:50 }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Форма добавления грамоты -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Выдать грамоту/сертификат</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Автор *</label>
+                    {{ form.author }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тип документа *</label>
+                    {{ form.certificate_type }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Место (для призовых)</label>
+                    {{ form.place }}
+                    <p class="text-xs text-gray-500 mt-1">Оставьте пустым, если не призовое</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Номинация</label>
+                    {{ form.nomination }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Файл документа *</label>
+                    {{ form.file }}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Поддерживаемые форматы: PDF, JPG, PNG, DOC, DOCX. Максимальный размер: 10MB.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn-admin px-6 py-3">
+                    Выдать документ
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список авторов -->
+    <div class="stat-card">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Авторы доклада</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Email</th>
+                        <th>Организация</th>
+                        <th>Роль</th>
+                        <th>Выдано документов</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for author_report in authors %}
+                    <tr>
+                        <td class="font-medium">{{ author_report.author.get_full_name }}</td>
+                        <td>{{ author_report.author.email }}</td>
+                        <td>{{ author_report.author.organization|default:"—" }}</td>
+                        <td>
+                            {% if author_report.role %}
+                            {{ author_report.role.name }}
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                            {% if author_report.is_main_author %}
+                            <span class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Основной</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="px-3 py-1 bg-gray-100 rounded-lg">
+                                {{ author_report.author.certificates.count }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Выданные документы -->
+    <div class="stat-card">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800">Выданные документы</h2>
+            <span class="px-3 py-2 bg-gray-100 rounded-lg">
+                {{ certificates.count }} документов
+            </span>
+        </div>
+
+        {% if certificates %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Автор</th>
+                        <th>Тип документа</th>
+                        <th>Место/Номинация</th>
+                        <th>Дата выдачи</th>
+                        <th>Кем выдан</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td class="font-medium">{{ cert.author.get_full_name }}</td>
+                        <td>{{ cert.get_certificate_type_display }}</td>
+                        <td>
+                            {% if cert.place %}{{ cert.place }} место{% endif %}
+                            {% if cert.nomination %}{{ cert.nomination }}{% endif %}
+                        </td>
+                        <td class="text-sm">{{ cert.issued_at|date:"d.m.Y H:i" }}</td>
+                        <td class="text-sm">{{ cert.issued_by.get_short_name }}</td>
+                        <td>
+                            {% if cert.is_published %}
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Опубликован</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Черновик</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <a href="{{ cert.file.url }}" target="_blank"
+                                   class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                                    Просмотреть
+                                </a>
+                                <form method="post" action="{% url 'conference_admin:delete_certificate' cert.id %}"
+                                      onsubmit="return confirm('Удалить этот документ?')">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
+                                        Удалить
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">Документы еще не выданы</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
