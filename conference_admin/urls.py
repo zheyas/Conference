@@ -14,8 +14,6 @@ urlpatterns = [
     # Управление докладами
     path('reports/', views.report_list_admin, name='report_list'),
     path('reports/<uuid:report_id>/', views.report_detail_admin, name='report_detail'),
-    path('reports/<uuid:report_id>/review/', views.create_review, name='create_review'),
-    path('reviews/<uuid:review_id>/edit/', views.edit_review, name='edit_review'),
 
     # Грамоты и сертификаты
     path('reports/<uuid:report_id>/certificates/', views.manage_certificates, name='manage_certificates'),

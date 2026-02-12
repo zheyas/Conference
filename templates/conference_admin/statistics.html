@@ -16,31 +16,28 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Основная статистика -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="stat-card text-center">
-        <div class="text-3xl font-bold text-gray-800 mb-2">{{ total_reports }}</div>
-        <div class="text-sm text-gray-500">Всего докладов</div>
-    </div>
-
-    <div class="stat-card text-center">
-        <div class="text-3xl font-bold text-gray-800 mb-2">{{ reviews_stats.total }}</div>
-        <div class="text-sm text-gray-500">Рецензий</div>
-    </div>
-
-    <div class="stat-card text-center">
-        <div class="text-3xl font-bold text-gray-800 mb-2">
-            {{ reviews_stats.avg_score }}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-card text-center">
+            <div class="text-3xl font-bold text-gray-800 mb-2">{{ total_reports }}</div>
+            <div class="text-sm text-gray-500">Всего докладов</div>
         </div>
-        <div class="text-sm text-gray-500">Средний балл</div>
+
+        <div class="stat-card text-center">
+            <div class="text-3xl font-bold text-gray-800 mb-2">{{ total_authors }}</div>
+            <div class="text-sm text-gray-500">Авторов</div>
+        </div>
+
+        <div class="stat-card text-center">
+            <div class="text-3xl font-bold text-gray-800 mb-2">{{ sections.count }}</div>
+            <div class="text-sm text-gray-500">Секций</div>
+        </div>
+
+        <div class="stat-card text-center">
+            <div class="text-3xl font-bold text-gray-800 mb-2">{{ certificates_count }}</div>
+            <div class="text-sm text-gray-500">Сертификатов</div>
+        </div>
     </div>
 
-    <div class="stat-card text-center">
-        <div class="text-3xl font-bold text-gray-800 mb-2">
-            {{ reviews_stats.confirmed }}
-        </div>
-        <div class="text-sm text-gray-500">Подтвержденных рецензий</div>
-    </div>
-</div>
     <!-- Две колонки с графиками -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Доклады по статусам -->

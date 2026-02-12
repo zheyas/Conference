@@ -9,3 +9,4 @@ staticfiles/
 .venv
 .__idea__
 *.sqlite3
+.idea

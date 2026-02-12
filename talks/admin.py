@@ -1,12 +1,11 @@
 # talks/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Section, Report, JuryMember  # Добавьте JuryMember
+from .models import Section, Report, JuryMember
 from authors.models import AuthorReport
 
 
 class AuthorReportInline(admin.TabularInline):
-    """Inline для отображения связи автор-доклад в админке доклада"""
     model = AuthorReport
     extra = 1
     verbose_name = 'Автор'
@@ -15,15 +14,8 @@ class AuthorReportInline(admin.TabularInline):
     fields = ['author', 'role', 'is_main_author', 'corresponding_author', 'order']
     autocomplete_fields = ['author']
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "role":
-            # Показываем только основные роли сначала
-            kwargs["queryset"] = db_field.related_model.objects.all().order_by('order')
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 class JuryMemberInline(admin.TabularInline):
-    """Inline для отображения членов жюри секции"""
     model = JuryMember
     extra = 1
     verbose_name = 'Член жюри'
@@ -35,11 +27,6 @@ class JuryMemberInline(admin.TabularInline):
 
     autocomplete_fields = ['user']
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "user":
-            kwargs["queryset"] = db_field.related_model.objects.filter(is_active=True)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
@@ -48,10 +35,8 @@ class SectionAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description', 'location']
     ordering = ['date', 'name']
 
-    # Используем inline для членов жюри вместо поля jury_members
     inlines = [JuryMemberInline]
 
-    # Используем fieldsets для лучшей организации полей
     fieldsets = (
         ('Основная информация', {
             'fields': (
@@ -71,7 +56,7 @@ class SectionAdmin(admin.ModelAdmin):
             'fields': (
                 'jury_chairman',
             ),
-            'classes': ('collapse',)  # Сворачиваем по умолчанию
+            'classes': ('collapse',)
         }),
         ('Метаданные', {
             'fields': ('created_at',),
@@ -81,7 +66,6 @@ class SectionAdmin(admin.ModelAdmin):
 
     readonly_fields = ['created_at']
 
-    # Показываем миниатюру иконки
     def icon_preview(self, obj):
         if obj.icon:
             return format_html(
@@ -92,19 +76,16 @@ class SectionAdmin(admin.ModelAdmin):
 
     icon_preview.short_description = 'Превью иконки'
 
-    # Добавляем поля только для чтения для предпросмотра
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj and obj.icon:  # Если объект уже существует и есть иконка
+        if obj and obj.icon:
             readonly_fields.append('icon_preview')
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
 
-        # Добавляем превью иконки в fieldsets, если объект существует
         if obj and obj.icon:
-            # Находим основную информацию fieldset и добавляем превью
             for i, (title, fieldset_dict) in enumerate(fieldsets):
                 if title == 'Основная информация':
                     fieldset_dict['fields'] = ('icon_preview',) + fieldset_dict['fields']
@@ -153,7 +134,6 @@ class ReportAdmin(admin.ModelAdmin):
         'created_by_display'
     ]
 
-    # УБИРАЕМ filter_horizontal и fieldsets с authors, используем только inline
     inlines = [AuthorReportInline]
 
     fieldsets = (
@@ -174,9 +154,10 @@ class ReportAdmin(admin.ModelAdmin):
             )
         }),
 
-        ('Статус и идентификаторы', {
+        ('Статус и комментарии', {
             'fields': (
                 'status',
+                'admin_comment',
                 'doi'
             )
         }),
@@ -192,7 +173,6 @@ class ReportAdmin(admin.ModelAdmin):
         }),
     )
 
-    # Методы для отображения в списке
     def title_short(self, obj):
         if len(obj.title) > 50:
             return f"{obj.title[:50]}..."
@@ -208,6 +188,7 @@ class ReportAdmin(admin.ModelAdmin):
             'review': ('#ffedd5', '#9a3412'),
             'approved': ('#d1fae5', '#065f46'),
             'rejected': ('fee2e2', '#991b1b'),
+            'revisions_required': ('#fef3c7', '#92400e'),
         }
 
         bg_color, text_color = status_colors.get(obj.status, ('#f3f4f6', '#374151'))
@@ -252,16 +233,7 @@ class ReportAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
 
-    # ВАЖНО: Переопределяем get_form чтобы убрать поле authors из формы
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        # Удаляем поле authors из формы, так как используем inline
-        if 'authors' in form.base_fields:
-            del form.base_fields['authors']
-        return form
 
-
-# Также можно зарегистрировать модель JuryMember для отдельного администрирования
 @admin.register(JuryMember)
 class JuryMemberAdmin(admin.ModelAdmin):
     list_display = ['section', 'get_full_name', 'organization', 'order']

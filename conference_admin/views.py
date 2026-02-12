@@ -1,19 +1,20 @@
+# conference_admin/views.py
 import json
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Avg, Sum
+from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.http import JsonResponse
 
 from .decorators import admin_required, jury_chairman_required
 from .forms import (
-    ReportStatusForm, ReviewForm, CertificateForm,
+    ReportStatusForm, CertificateForm,
     SectionForm, UserRoleForm, SearchUserForm, JuryMemberForm
 )
-from talks.models import Report, Review, Certificate, Section, JuryMember
+from talks.models import Report, Certificate, Section, JuryMember
 from authors.models import Author, AuthorReport
 from users.models import User
 
@@ -28,9 +29,9 @@ def admin_dashboard(request):
         'submitted_reports': Report.objects.filter(status='submitted').count(),
         'under_review': Report.objects.filter(status='review').count(),
         'approved_reports': Report.objects.filter(status='approved').count(),
+        'revisions_required': Report.objects.filter(status='revisions_required').count(),
         'rejected_reports': Report.objects.filter(status='rejected').count(),
         'total_authors': Author.objects.count(),
-        'pending_reviews': Review.objects.filter(is_confirmed=False).count(),
         'total_certificates': Certificate.objects.count(),
         'total_sections': Section.objects.count(),
     }
@@ -43,19 +44,13 @@ def admin_dashboard(request):
     # Доклады, требующие внимания
     attention_reports = Report.objects.filter(
         Q(status='submitted') |
-        Q(reviews__is_confirmed=False)
+        Q(status='revisions_required')
     ).distinct()[:5]
-
-    # Последние рецензии
-    recent_reviews = Review.objects.select_related(
-        'report', 'reviewer'
-    ).order_by('-created_at')[:5]
 
     return render(request, 'conference_admin/dashboard.html', {
         'stats': stats,
         'recent_reports': recent_reports,
         'attention_reports': attention_reports,
-        'recent_reviews': recent_reviews,
     })
 
 
@@ -115,111 +110,41 @@ def report_detail_admin(request, report_id):
         report=report
     ).select_related('author', 'role').order_by('order')
 
-    reviews = Review.objects.filter(
-        report=report
-    ).select_related('reviewer')
-
     certificates = Certificate.objects.filter(
         report=report
     ).select_related('author')
 
-    # Форма для изменения статуса
-    status_form = ReportStatusForm(initial={'status': report.status})
-
+    # Форма для изменения статуса и комментариев
     if request.method == 'POST':
         if 'change_status' in request.POST:
-            status_form = ReportStatusForm(request.POST)
+            status_form = ReportStatusForm(request.POST, instance=report)
             if status_form.is_valid():
-                new_status = status_form.cleaned_data['status']
-                comment = status_form.cleaned_data['comment']
+                old_status = report.status
+                report = status_form.save()
 
-                # Сохраняем старый статус для сообщения
-                old_status_display = report.get_status_display()
+                # Устанавливаем время рассмотрения, если статус изменен на approved/rejected/revisions_required
+                if report.status in ['approved', 'rejected', 'revisions_required']:
+                    report.reviewed_at = timezone.now()
 
-                # Обновляем статус
-                report.status = new_status
-                report.reviewed_at = timezone.now()
                 report.save()
 
                 messages.success(
                     request,
-                    f'Статус доклада изменен с "{old_status_display}" '
-                    f'на "{report.get_status_display()}"'
+                    f'Статус доклада изменен с "{old_status}" на "{report.get_status_display()}"'
                 )
 
-                if comment:
-                    messages.info(request, f'Комментарий для автора: {comment}')
+                if report.admin_comment:
+                    messages.info(request, f'Комментарий для авторов добавлен.')
 
                 return redirect('conference_admin:report_detail', report_id=report.id)
+    else:
+        status_form = ReportStatusForm(instance=report)
 
     return render(request, 'conference_admin/report_detail.html', {
         'report': report,
         'authors': authors,
-        'reviews': reviews,
         'certificates': certificates,
         'status_form': status_form,
-    })
-
-
-@admin_required
-def create_review(request, report_id):
-    """Создание рецензии на доклад"""
-
-    report = get_object_or_404(Report, id=report_id)
-
-    # Проверяем, не оставлял ли уже этот рецензент рецензию
-    existing_review = Review.objects.filter(
-        report=report,
-        reviewer=request.user
-    ).first()
-
-    if existing_review:
-        messages.info(request, 'Вы уже оставили рецензию на этот доклад.')
-        return redirect('conference_admin:report_detail', report_id=report.id)
-
-    if request.method == 'POST':
-        form = ReviewForm(request.POST)
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.report = report
-            review.reviewer = request.user
-            review.submitted_at = timezone.now()
-            review.save()
-
-            # Обновляем статус доклада, если он был "submitted"
-            if report.status == 'submitted':
-                report.status = 'review'
-                report.save()
-
-            messages.success(request, 'Рецензия успешно добавлена.')
-            return redirect('conference_admin:report_detail', report_id=report.id)
-    else:
-        form = ReviewForm()
-
-    return render(request, 'conference_admin/create_review.html', {
-        'form': form,
-        'report': report,
-    })
-
-
-@admin_required
-def edit_review(request, review_id):
-    """Редактирование рецензии"""
-
-    review = get_object_or_404(Review, id=review_id)
-
-    if request.method == 'POST':
-        form = ReviewForm(request.POST, instance=review)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Рецензия успешно обновлена.')
-            return redirect('conference_admin:report_detail', report_id=review.report.id)
-    else:
-        form = ReviewForm(instance=review)
-
-    return render(request, 'conference_admin/edit_review.html', {
-        'form': form,
-        'review': review,
     })
 
 
@@ -279,78 +204,40 @@ def delete_certificate(request, certificate_id):
 def manage_sections(request):
     """Управление секциями конференции"""
 
-    # Для дебаггинга
-    print(f"\n=== Управление секциями ===")
-    print(f"Метод запроса: {request.method}")
-    print(f"Пользователь: {request.user.email if request.user.is_authenticated else 'Не аутентифицирован'}")
-
     sections = Section.objects.all().order_by('name')
-    print(f"Найдено секций в БД: {sections.count()}")
-
-    from users.models import User
     all_users = User.objects.filter(is_active=True).order_by('last_name', 'first_name')
-    print(f"Найдено пользователей для выбора председателя: {all_users.count()}")
 
     if request.method == 'POST':
-        print(f"\nPOST данные:")
-        for key, value in request.POST.items():
-            print(f"  {key}: {value}")
-
         if 'add_section' in request.POST:
-            print("\n=== Попытка создания секции ===")
             form = SectionForm(request.POST, request.FILES)
-            print(f"Форма создана: {form}")
-            print(f"Данные формы: {form.data}")
-            print(f"Файлы: {request.FILES}")
-
             if form.is_valid():
-                print("✓ Форма валидна")
-                try:
-                    section = form.save()
-                    print(f"✓ Секция сохранена: ID={section.id}, Название='{section.name}'")
-                    messages.success(request, f'Секция "{section.name}" успешно создана.')
-                    return redirect('conference_admin:manage_sections')
-                except Exception as e:
-                    print(f"✗ Ошибка при сохранении: {str(e)}")
-                    messages.error(request, f'Ошибка при сохранении секции: {str(e)}')
+                section = form.save()
+                messages.success(request, f'Секция "{section.name}" успешно создана.')
+                return redirect('conference_admin:manage_sections')
             else:
-                print("✗ Форма не валидна")
-                print(f"Ошибки формы: {form.errors}")
                 messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
 
         elif 'edit_section' in request.POST:
-            print("\n=== Попытка редактирования секции ===")
             section_id = request.POST.get('section_id')
-            print(f"ID секции для редактирования: {section_id}")
-
             try:
                 section = get_object_or_404(Section, id=section_id)
                 form = SectionForm(request.POST, request.FILES, instance=section)
 
                 if form.is_valid():
                     section = form.save()
-                    print(f"✓ Секция обновлена: ID={section.id}, Название='{section.name}'")
                     messages.success(request, f'Секция "{section.name}" успешно обновлена.')
                     return redirect('conference_admin:manage_sections')
                 else:
-                    print(f"✗ Форма редактирования не валидна: {form.errors}")
                     messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
             except Exception as e:
-                print(f"✗ Ошибка при редактировании: {str(e)}")
                 messages.error(request, f'Ошибка при редактировании: {str(e)}')
 
         elif 'delete_section' in request.POST:
-            print("\n=== Попытка удаления секции ===")
             section_id = request.POST.get('section_id')
-            print(f"ID секции для удаления: {section_id}")
-
             try:
                 section = get_object_or_404(Section, id=section_id)
-                print(f"Найдена секция: '{section.name}'")
 
-                # Проверяем, есть ли доклады в этой секции
                 if section.reports.exists():
-                    print(f"✗ В секции есть доклады ({section.reports.count()})")
                     messages.error(
                         request,
                         f'Нельзя удалить секцию "{section.name}", в которой есть доклады. '
@@ -359,27 +246,21 @@ def manage_sections(request):
                 else:
                     section_name = section.name
                     section.delete()
-                    print(f"✓ Секция '{section_name}' удалена")
                     messages.success(request, f'Секция "{section_name}" успешно удалена.')
 
             except Exception as e:
-                print(f"✗ Ошибка при удалении: {str(e)}")
                 messages.error(request, f'Ошибка при удалении: {str(e)}')
 
             return redirect('conference_admin:manage_sections')
     else:
-        print("\n=== GET запрос ===")
         form = SectionForm()
-        print(f"Форма для GET запроса создана: {form}")
-
-    print(f"Передаем в шаблон: {sections.count()} секций, форма с {len(form.fields)} полями")
-    print("====================\n")
 
     return render(request, 'conference_admin/manage_sections.html', {
         'sections': sections,
         'form': form,
         'all_users': all_users,
     })
+
 
 @admin_required
 def author_list_admin(request):
@@ -488,11 +369,11 @@ def get_section_data(request, section_id):
         'time': section.time.strftime('%H:%M'),
         'location': section.location,
         'jury_chairman': str(section.jury_chairman.id) if section.jury_chairman else None,
-        'jury_members': [str(member.id) for member in section.jury_members.all()],
         'icon_url': section.icon.url if section.icon else None,
     }
 
     return JsonResponse(data)
+
 
 @admin_required
 def statistics(request):
@@ -515,34 +396,13 @@ def statistics(request):
         count=Count('id')
     ).order_by('-count')
 
-    # Статистика по рецензиям
-    total_reviews = Review.objects.count()
-    confirmed_reviews = Review.objects.filter(is_confirmed=True).count()
-
-    # Вычисляем средний балл в Python, так как total_score - это свойство
-    reviews = Review.objects.all()
-    if reviews.exists():
-        # Создаем список всех total_score
-        total_scores = []
-        for review in reviews:
-            total_scores.append(review.total_score)
-        avg_score = sum(total_scores) / len(total_scores)
-    else:
-        avg_score = 0
-
-    reviews_stats = {
-        'total': total_reviews,
-        'avg_score': round(avg_score, 1),
-        'confirmed': confirmed_reviews,
-    }
-
     # Топ авторов
     top_authors = Author.objects.annotate(
         report_count=Count('reports'),
         certificate_count=Count('certificates')
     ).order_by('-report_count')[:10]
 
-    # Статистика по месяцам (только если используете SQLite)
+    # Статистика по месяцам
     monthly_stats = []
     try:
         monthly_stats = Report.objects.extra(
@@ -551,14 +411,12 @@ def statistics(request):
             count=Count('id')
         ).order_by('month')
     except:
-        # Для других баз данных или если возникла ошибка
         pass
 
     return render(request, 'conference_admin/statistics.html', {
         'total_reports': total_reports,
         'reports_by_status': reports_by_status,
         'reports_by_section': reports_by_section,
-        'reviews_stats': reviews_stats,
         'top_authors': top_authors,
         'monthly_stats': list(monthly_stats),
     })
@@ -568,49 +426,6 @@ def statistics(request):
 def statistics_api(request):
     """API для статистики (JSON)"""
 
-    # Статистика по дням (последние 30 дней)
-    from datetime import datetime, timedelta
-
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
-
-    daily_stats = []
-    for i in range(30):
-        date = start_date + timedelta(days=i)
-        date_str = date.strftime('%Y-%m-%d')
-
-        reports_count = Report.objects.filter(
-            created_at__date=date.date()
-        ).count()
-
-        daily_stats.append({
-            'date': date_str,
-            'reports': reports_count,
-        })
-
-    # Вычисляем средний балл для API
-    reviews = Review.objects.all()
-    if reviews.exists():
-        total_scores = []
-        for review in reviews:
-            total_scores.append(review.total_score)
-        avg_review_score = sum(total_scores) / len(total_scores)
-    else:
-        avg_review_score = 0
-
-    return JsonResponse({
-        'daily_stats': daily_stats,
-        'total_reports': Report.objects.count(),
-        'total_authors': Author.objects.count(),
-        'total_reviews': Review.objects.count(),
-        'avg_review_score': round(avg_review_score, 1),
-    })
-
-@admin_required
-def statistics_api(request):
-    """API для статистики (JSON)"""
-
-    # Статистика по дням (последние 30 дней)
     from datetime import datetime, timedelta
 
     end_date = datetime.now()
@@ -634,10 +449,6 @@ def statistics_api(request):
         'daily_stats': daily_stats,
         'total_reports': Report.objects.count(),
         'total_authors': Author.objects.count(),
-        'total_reviews': Review.objects.count(),
-        'avg_review_score': Review.objects.aggregate(
-            avg=Avg('total_score')
-        )['avg'] or 0,
     })
 
 
@@ -653,7 +464,6 @@ def jury_chairman_dashboard(request):
         return redirect('index')
 
     # Статистика для председателя
-    stats = {}
     reports_by_section = []
 
     for section in sections:
@@ -663,6 +473,7 @@ def jury_chairman_dashboard(request):
             'submitted_reports': section.reports.filter(status='submitted').count(),
             'under_review': section.reports.filter(status='review').count(),
             'approved_reports': section.reports.filter(status='approved').count(),
+            'revisions_required': section.reports.filter(status='revisions_required').count(),
         }
         reports_by_section.append(section_stats)
 
@@ -719,8 +530,6 @@ def jury_section_reports(request, section_id):
     })
 
 
-# conference_admin/views.py - добавьте представление
-
 @admin_required
 def manage_section_jury(request, section_id):
     """Управление членами жюри секции"""
@@ -733,7 +542,6 @@ def manage_section_jury(request, section_id):
     users = []
 
     if search_form.is_valid() and search_form.cleaned_data.get('search'):
-        from users.models import User
         search_term = search_form.cleaned_data['search']
         users = User.objects.filter(
             Q(last_name__icontains=search_term) |
@@ -752,7 +560,6 @@ def manage_section_jury(request, section_id):
                 jury_member = form.save(commit=False)
                 jury_member.section = section
 
-                # Автоматически заполняем данные из пользователя
                 if jury_member.user:
                     jury_member.last_name = jury_member.user.last_name
                     jury_member.first_name = jury_member.user.first_name
@@ -810,7 +617,6 @@ def add_user_to_jury(request, section_id, user_id):
     section = get_object_or_404(Section, id=section_id)
     user = get_object_or_404(User, id=user_id)
 
-    # Проверяем, не добавлен ли уже пользователь
     if JuryMember.objects.filter(section=section, user=user).exists():
         messages.warning(request, f'{user.get_full_name()} уже является членом жюри этой секции.')
     else:

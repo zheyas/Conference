@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .form-container {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .form-input {
+        background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        width: 100%;
+        backdrop-filter: blur(5px);
+    }
+
+    .form-input:focus {
+        border-color: #3b82f6;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+        outline: none;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .required-star {
+        color: #ef4444;
+    }
+
+    .file-upload-area {
+        border: 3px dashed rgba(203, 213, 225, 0.7);
+        border-radius: 20px;
+        padding: 60px 30px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(239, 246, 255, 0.3) 0%, rgba(245, 243, 255, 0.3) 100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        margin-top: 12px;
+    }
+
+    .file-upload-area::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        z-index: 1;
+    }
+
+    .file-upload-area:hover {
+        border-color: rgba(59, 130, 246, 0.8);
+        background: linear-gradient(135deg, rgba(219, 234, 254, 0.4) 0%, rgba(221, 214, 254, 0.4) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.15);
+    }
+
+    .file-upload-area:active {
+        transform: translateY(0);
+        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.1);
+    }
+
+    .file-upload-area .upload-icon {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 20px;
+    }
+
+    .file-upload-area .upload-text {
+        position: relative;
+        z-index: 2;
+    }
+
+    .file-upload-area input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 3;
+    }
+
+    .current-file {
+        background: linear-gradient(135deg, rgba(236, 253, 245, 0.9) 0%, rgba(209, 250, 229, 0.9) 100%);
+        border: 2px solid rgba(167, 243, 208, 0.8);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+    }
+
+    .current-file:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(167, 243, 208, 0.2);
+    }
+
+    .file-preview {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 255, 0.95) 100%);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 8px;
+        backdrop-filter: blur(5px);
+    }
+
+    select.form-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 20px;
+        padding-right: 50px;
+    }
+
+    textarea.form-input {
+        resize: vertical;
+        min-height: 150px;
+        max-height: 300px;
+    }
+
+    /* Анимация для загруженных файлов */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .file-preview {
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* Пульсирующая анимация для кнопки загрузки */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.8;
+        }
+    }
+
+    .file-upload-area:hover .upload-icon {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="form-container">
+            <!-- Заголовок -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 mb-6 shadow-xl animate-pulse">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-3">Редактирование доклада</h1>
+                <p class="text-lg text-gray-600">
+                    {{ report.title|truncatechars:50 }}
+                </p>
+            </div>
+
+            <!-- Форма -->
+            <form method="post" enctype="multipart/form-data" class="space-y-8">
+                {% csrf_token %}
+
+                <!-- Название доклада -->
+                <div>
+                    <label class="form-label">
+                        Название доклада <span class="required-star">*</span>
+                    </label>
+                    <input type="text"
+                           name="title"
+                           value="{{ form.title.value|default:report.title }}"
+                           required
+                           class="form-input"
+                           placeholder="Введите название доклада">
+                </div>
+
+                <!-- Аннотация -->
+                <div>
+                    <label class="form-label">
+                        Аннотация <span class="required-star">*</span>
+                    </label>
+                    <textarea name="abstract"
+                              required
+                              class="form-input h-48"
+                              placeholder="Краткое описание доклада (200-500 слов)">{{ form.abstract.value|default:report.abstract }}</textarea>
+                </div>
+
+                <!-- Секция -->
+                <div>
+                    <label class="form-label">
+                        Секция <span class="required-star">*</span>
+                    </label>
+                    <select name="section" required class="form-input">
+                        <option value="">-- Выберите секцию --</option>
+                        {% for section in form.section.field.queryset %}
+                        <option value="{{ section.id }}"
+                                {% if section.id == form.section.value|default:report.section.id %}selected{% endif %}>
+                            {{ section.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Ключевые слова -->
+                <div>
+                    <label class="form-label">Ключевые слова</label>
+                    <input type="text"
+                           name="keywords"
+                           value="{{ form.keywords.value|default:report.keywords }}"
+                           class="form-input"
+                           placeholder="Ключевые слова через запятую">
+                </div>
+
+                <!-- Файлы -->
+                <div class="space-y-8">
+                    <!-- Текст доклада -->
+                    <div>
+                        <label class="form-label">
+                            Текст доклада <span class="required-star">*</span>
+                        </label>
+
+                        {% if report.report_file %}
+                        <div class="current-file">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-8 h-8 text-blue-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ report.report_file.name|slice:"-30:" }}</div>
+                                        <div class="text-sm text-gray-600 mt-1">{{ report.get_file_size }}</div>
+                                    </div>
+                                </div>
+                                <a href="{{ report.report_file.url }}" target="_blank"
+                                   class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition">
+                                    Скачать
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Область загрузки файла -->
+                        <div class="file-upload-area relative group">
+                            <input type="file" name="report_file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="upload-icon">
+                                <svg class="w-16 h-16 text-blue-400 mx-auto group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <div class="text-xl font-semibold text-blue-600 mb-2 group-hover:text-blue-700 transition-colors">
+                                    Загрузить новый файл
+                                </div>
+                                <p class="text-gray-600 text-sm max-w-md mx-auto">
+                                    Перетащите файл сюда или нажмите для выбора
+                                </p>
+                                <p class="text-gray-500 text-xs mt-2">
+                                    Поддерживаемые форматы: DOC, DOCX, PDF (максимум 10MB)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Презентация -->
+                    <div>
+                        <label class="form-label">Презентация (опционально)</label>
+
+                        {% if report.presentation_file %}
+                        <div class="current-file">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-8 h-8 text-purple-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                                    </svg>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ report.presentation_file.name|slice:"-30:" }}</div>
+                                        <div class="text-sm text-gray-600 mt-1">{{ report.get_file_size }}</div>
+                                    </div>
+                                </div>
+                                <a href="{{ report.presentation_file.url }}" target="_blank"
+                                   class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition">
+                                    Скачать
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Область загрузки презентации -->
+                        <div class="file-upload-area relative group">
+                            <input type="file" name="presentation_file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="upload-icon">
+                                <svg class="w-16 h-16 text-purple-400 mx-auto group-hover:text-purple-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <div class="text-xl font-semibold text-purple-600 mb-2 group-hover:text-purple-700 transition-colors">
+                                    Загрузить презентацию
+                                </div>
+                                <p class="text-gray-600 text-sm max-w-md mx-auto">
+                                    Перетащите файл сюда или нажмите для выбора
+                                </p>
+                                <p class="text-gray-500 text-xs mt-2">
+                                    Поддерживаемые форматы: PPT, PPTX, PDF (максимум 10MB)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t border-gray-200">
+                    <div class="flex flex-wrap gap-4">
+                        <a href="{% url 'report_detail' report.id %}"
+                           class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition hover:shadow-md">
+                            ← Отмена
+                        </a>
+                        <a href="{% url 'report_edit_authors' report.id %}"
+                           class="px-6 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 text-blue-600 rounded-lg hover:shadow-md transition">
+                            👥 Управление авторами
+                        </a>
+                    </div>
+
+                    <button type="submit"
+                            class="px-10 py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-2xl transition-all shadow-lg hover:scale-105 active:scale-95">
+                        💾 Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Обработка загрузки файлов с улучшенной анимацией
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+
+        fileInputs.forEach(input => {
+            const uploadArea = input.closest('.file-upload-area');
+
+            input.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2) + ' MB';
+
+                    // Создаем превью файла
+                    const previewHTML = `
+                        <div class="file-preview">
+                            <div class="flex items-center">
+                                <svg class="w-10 h-10 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900 truncate">${fileName}</div>
+                                    <div class="text-sm text-gray-500">${fileSize}</div>
+                                </div>
+                                <button type="button" class="text-red-500 hover:text-red-700 clear-file ml-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Добавляем превью после области загрузки
+                    uploadArea.insertAdjacentHTML('afterend', previewHTML);
+
+                    // Добавляем возможность очистить файл
+                    const clearBtn = uploadArea.nextElementSibling.querySelector('.clear-file');
+                    clearBtn.addEventListener('click', function() {
+                        input.value = '';
+                        uploadArea.nextElementSibling.remove();
+                        uploadArea.style.display = 'block';
+                    });
+
+                    // Скрываем область загрузки
+                    uploadArea.style.display = 'none';
+                }
+            });
+
+            // Drag and drop эффекты
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('border-blue-500', 'bg-blue-50');
+                this.style.transform = 'translateY(-4px)';
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('border-blue-500', 'bg-blue-50');
+                this.style.transform = 'translateY(0)';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('border-blue-500', 'bg-blue-50');
+                this.style.transform = 'translateY(0)';
+
+                if (e.dataTransfer.files.length) {
+                    input.files = e.dataTransfer.files;
+                    const event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,10 +1,15 @@
-#talks/models.py
+# talks/models.py
 import os
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
 import uuid
 
+def default_date():
+    return timezone.now().date()
+
+def default_time():
+    return timezone.now().time()
 
 def report_file_path(instance, filename):
     """Генерирует путь для файла доклада"""
@@ -18,14 +23,6 @@ def section_icon_path(instance, filename):
     ext = filename.split('.')[-1]
     filename = f"section_{uuid.uuid4()}.{ext}"
     return os.path.join('sections/icons', filename)
-
-
-# Функции для значений по умолчанию
-def default_date():
-    return timezone.now().date()
-
-def default_time():
-    return timezone.now().time()
 
 
 class Section(models.Model):
@@ -71,9 +68,8 @@ class Section(models.Model):
         default=''
     )
 
-    # Изменяем: связываем с User, а не с Author
     jury_chairman = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # Изменено
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -81,7 +77,6 @@ class Section(models.Model):
         verbose_name='Председатель жюри'
     )
 
-    # Удаляем ManyToMany поле и добавляем свойство для обратной связи
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -91,30 +86,6 @@ class Section(models.Model):
         """Полная дата и время проведения"""
         return f"{self.date} в {self.time}"
 
-    def get_jury_info(self):
-        """Информация о жюри"""
-        info = []
-        if self.jury_chairman:
-            info.append(f"Председатель: {self.jury_chairman.get_full_name()}")
-
-        members = self.jury_members_list.all()
-        if members.exists():
-            member_names = ", ".join([m.get_short_name() for m in members])
-            info.append(f"Члены жюри: {member_names}")
-
-        return "; ".join(info)
-
-    def get_jury_members(self):
-        """Получить всех членов жюри"""
-        return self.jury_members_list.all()
-
-    def get_jury_users(self):
-        """Получить только пользователей системы в жюри"""
-        return self.jury_members_list.filter(user__isnull=False).select_related('user')
-
-    def get_custom_jury_members(self):
-        """Получить только произвольных членов жюри"""
-        return self.jury_members_list.filter(user__isnull=True)
 
 class Report(models.Model):
     """Доклад/презентация"""
@@ -135,8 +106,8 @@ class Report(models.Model):
     abstract = models.TextField(
         verbose_name='Аннотация доклада',
         help_text='Краткое описание доклада (200-500 слов)',
-        blank=True,  # Разрешить пустые значения в формах
-        null=True,  # Разрешить NULL в базе данных
+        blank=True,
+        null=True,
     )
 
     section = models.ForeignKey(
@@ -162,15 +133,7 @@ class Report(models.Model):
         null=True
     )
 
-    # Связь с авторами через промежуточную модель
-    authors = models.ManyToManyField(
-        'authors.Author',  # Ссылка на модель в приложении authors
-        through='authors.AuthorReport',  # Промежуточная модель
-        related_name='reports',
-        verbose_name='Авторы'
-    )
-
-    # Пользователь, создавший доклад (для быстрого доступа)
+    # Пользователь, создавший доклад
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -188,6 +151,8 @@ class Report(models.Model):
             ('review', 'На рассмотрении'),
             ('approved', 'Одобрено'),
             ('rejected', 'Отклонено'),
+            ('revisions_required', 'Требуются доработки'),
+            ('resubmitted', 'Подано повторно'),
         ],
         default='draft',
         verbose_name='Статус'
@@ -207,11 +172,26 @@ class Report(models.Model):
         verbose_name='DOI'
     )
 
+    # Комментарии администратора (упрощенная альтернатива рецензиям)
+    admin_comment = models.TextField(
+        blank=True,
+        verbose_name='Комментарий администратора',
+        help_text='Замечания и предложения для авторов'
+    )
+
+    # Описание внесенных изменений при повторной отправке
+    revision_description = models.TextField(
+        blank=True,
+        verbose_name='Описание внесенных изменений',
+        help_text='Что было исправлено в докладе после замечаний'
+    )
+
     # Метаданные
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
+    resubmitted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -237,127 +217,81 @@ class Report(models.Model):
         except:
             return "N/A"
 
-    def get_main_authors(self):
-        """Получить основных авторов"""
+    def get_authors(self):
+        """Получить всех авторов"""
         from authors.models import AuthorReport
-        return self.author_reports.filter(is_main_author=True).select_related('author')
+        return AuthorReport.objects.filter(
+            report=self,
+            role__code='author'
+        ).select_related('author').order_by('order')
+
+    def get_supervisors(self):
+        """Получить всех научных руководителей"""
+        from authors.models import AuthorReport
+        return AuthorReport.objects.filter(
+            report=self,
+            role__code='supervisor'
+        ).select_related('author').order_by('order')
 
     def get_corresponding_authors(self):
         """Получить авторов для корреспонденции"""
         from authors.models import AuthorReport
-        return self.author_reports.filter(corresponding_author=True).select_related('author')
+        return AuthorReport.objects.filter(
+            report=self,
+            corresponding_author=True
+        ).select_related('author').order_by('order')
 
-    def get_authors_with_roles(self):
-        """Получить авторов с их ролями в правильном порядке"""
+    def get_all_participants(self):
+        """Получить всех участников (авторов и руководителей)"""
         from authors.models import AuthorReport
-        return self.author_reports.all().select_related('author', 'role').order_by('order')
+        return AuthorReport.objects.filter(
+            report=self
+        ).select_related('author', 'role').order_by('order')
+
+    def can_be_resubmitted(self):
+        """Может ли доклад быть отправлен повторно (без проверки пользователя)"""
+        return self.status == 'revisions_required'
+
+    def can_be_resubmitted_by_author(self, user):
+        """Может ли автор повторно отправить доклад после доработок"""
+        # Проверяем, является ли пользователь автором или создателем
+        is_author_or_creator = (
+                self.created_by == user or
+                self.author_reports.filter(author__user=user).exists()
+        )
+
+        if not is_author_or_creator:
+            return False
+
+        # Проверяем статус доклада
+        return self.status == 'revisions_required'
+
+    @property
+    def needs_resubmission(self):
+        """Нуждается ли доклад в повторной отправке"""
+        return self.status == 'revisions_required'
 
     def save(self, *args, **kwargs):
         # Автоматически устанавливаем время подачи при смене статуса
         if self.status == 'submitted' and not self.submitted_at:
             self.submitted_at = timezone.now()
+
+        # Автоматически устанавливаем время повторной отправки
+        if self.status == 'resubmitted' and not self.resubmitted_at:
+            self.resubmitted_at = timezone.now()
+
+        # Автоматически устанавливаем время рассмотрения
+        if self.status in ['approved', 'rejected', 'revisions_required'] and not self.reviewed_at:
+            self.reviewed_at = timezone.now()
+
         super().save(*args, **kwargs)
+
 
 def certificate_file_path(instance, filename):
     """Генерирует путь для файла грамоты/сертификата"""
     ext = filename.split('.')[-1]
     filename = f"{uuid.uuid4()}.{ext}"
     return os.path.join('certificates', str(instance.report.id)[:2], filename)
-
-
-class Review(models.Model):
-    """Рецензия на доклад"""
-
-    class Meta:
-        verbose_name = 'Рецензия'
-        verbose_name_plural = 'Рецензии'
-        unique_together = ['report', 'reviewer']
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    report = models.ForeignKey(
-        Report,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Доклад'
-    )
-
-    reviewer = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Рецензент'
-    )
-
-    STATUS_CHOICES = [
-        ('pending', 'На рассмотрении'),
-        ('minor_revisions', 'Незначительные доработки'),
-        ('major_revisions', 'Значительные доработки'),
-        ('accepted', 'Принят'),
-        ('rejected', 'Отклонен'),
-    ]
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='pending',
-        verbose_name='Статус рецензии'
-    )
-
-    comment_for_author = models.TextField(
-        verbose_name='Комментарий для автора',
-        help_text='Конструктивные замечания и предложения для автора'
-    )
-
-    comment_for_committee = models.TextField(
-        blank=True,
-        verbose_name='Комментарий для комитета',
-        help_text='Внутренний комментарий для программного комитета'
-    )
-
-    score_originality = models.PositiveSmallIntegerField(
-        verbose_name='Оригинальность (1-5)',
-        default=3
-    )
-
-    score_relevance = models.PositiveSmallIntegerField(
-        verbose_name='Актуальность (1-5)',
-        default=3
-    )
-
-    score_methodology = models.PositiveSmallIntegerField(
-        verbose_name='Методология (1-5)',
-        default=3
-    )
-
-    score_presentation = models.PositiveSmallIntegerField(
-        verbose_name='Презентация (1-5)',
-        default=3
-    )
-
-    score_quality = models.PositiveSmallIntegerField(
-        verbose_name='Качество (1-5)',
-        default=3
-    )
-
-    is_confirmed = models.BooleanField(
-        default=False,
-        verbose_name='Рецензия подтверждена'
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    submitted_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Рецензия на {self.report.title} от {self.reviewer.get_short_name()}"
-
-    @property
-    def total_score(self):
-        """Общий балл"""
-        return (self.score_originality + self.score_relevance +
-                self.score_methodology + self.score_presentation +
-                self.score_quality)
 
 
 class Certificate(models.Model):
@@ -524,7 +458,7 @@ class JuryMember(models.Model):
         verbose_name = 'Член жюри'
         verbose_name_plural = 'Члены жюри'
         ordering = ['order', 'last_name', 'first_name']
-        unique_together = ['section', 'user']  # Пользователь может быть в секции только один раз
+        unique_together = ['section', 'user']
 
     def __str__(self):
         if self.user:
@@ -559,30 +493,3 @@ class JuryMember(models.Model):
                     result += f'{self.middle_name[0]}.'
                 return result
             return "Член жюри"
-
-    def get_info(self):
-        """Полная информация о члене жюри"""
-        info = []
-
-        if self.user:
-            info.append(self.user.get_full_name())
-            if self.user.organization:
-                info.append(f"Организация: {self.user.organization}")
-            if self.user.position:
-                info.append(f"Должность: {self.user.position}")
-            if self.user.academic_degree:
-                info.append(f"Степень: {self.user.academic_degree}")
-            if self.user.academic_title:
-                info.append(f"Звание: {self.user.academic_title}")
-        else:
-            info.append(self.get_full_name())
-            if self.organization:
-                info.append(f"Организация: {self.organization}")
-            if self.position:
-                info.append(f"Должность: {self.position}")
-            if self.academic_degree:
-                info.append(f"Степень: {self.academic_degree}")
-            if self.academic_title:
-                info.append(f"Звание: {self.academic_title}")
-
-        return "; ".join(info)

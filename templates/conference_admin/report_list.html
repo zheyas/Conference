@@ -19,6 +19,7 @@
                         <option value="review" {% if status_filter == 'review' %}selected{% endif %}>На рассмотрении</option>
                         <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Одобрено</option>
                         <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Отклонено</option>
+                        <option value="revisions_required" {% if status_filter == 'revisions_required' %}selected{% endif %}>Требуются доработки</option>
                     </select>
                 </div>
 
@@ -111,10 +112,10 @@
                                    class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
                                     Просмотр
                                 </a>
-                                {% if report.status == 'submitted' or report.status == 'review' %}
-                                <a href="{% url 'conference_admin:create_review' report.id %}"
+                                {% if report.status == 'revisions_required' %}
+                                <a href="{% url 'conference_admin:manage_certificates' report.id %}"
                                    class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-                                    Рецензия
+                                    Грамоты
                                 </a>
                                 {% endif %}
                             </div>

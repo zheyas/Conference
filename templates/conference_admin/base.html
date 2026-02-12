@@ -10,129 +10,264 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         :root {
-            --color-dark: #101a2b;
+            --color-dark: #0f172a;
             --color-neon: #4effff;
-            --color-sea: #2b9fc1;
-            --color-light: #a8abc4;
+            --color-sea: #0e9bc1;
+            --color-light: #94a3b8;
             --color-white: #ffffff;
             --color-bg: #f8fafc;
+            --color-primary: #3b82f6;
+            --color-primary-dark: #2563eb;
+            --color-gradient-start: #38bdf8;
+            --color-gradient-end: #6366f1;
         }
 
         * {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
             background-color: var(--color-bg);
             color: var(--color-dark);
-            box-sizing: border-box;
+            min-height: 100vh;
         }
 
         .admin-gradient {
-            background: linear-gradient(135deg, var(--color-dark) 0%, #1a2840 50%, #253553 100%);
+            background: linear-gradient(165deg,
+                var(--color-dark) 0%,
+                #1e293b 60%,
+                #334155 100%
+            );
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(78, 255, 255, 0.1);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn-admin {
-            background: var(--color-neon);
-            color: var(--color-dark);
+            background: linear-gradient(105deg,
+                var(--color-gradient-start) 0%,
+                var(--color-gradient-end) 100%
+            );
+            color: white;
             font-weight: 600;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 20px 0 rgba(78, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 12px 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 20px -6px rgba(56, 189, 248, 0.4);
+            border: none;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-admin::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 80%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.5s ease;
+            border-radius: 50%;
+            z-index: 1;
         }
 
         .btn-admin:hover {
-            background: var(--color-sea);
-            color: var(--color-white);
-            box-shadow: 0 0 25px 0 rgba(43, 159, 193, 0.3);
-            transform: translateY(-1px);
+            background: linear-gradient(105deg,
+                var(--color-gradient-end) 0%,
+                var(--color-gradient-start) 100%
+            );
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -8px rgba(56, 189, 248, 0.6);
+        }
+
+        .btn-admin:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .btn-admin:active {
+            transform: translateY(0) scale(0.98);
         }
 
         .btn-danger {
-            background: #ef4444;
+            background: linear-gradient(105deg, #ef4444 0%, #dc2626 100%);
             color: white;
             font-weight: 600;
-            border-radius: 12px;
-            transition: all 0.2s ease;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px -6px rgba(239, 68, 68, 0.4);
+            border: none;
         }
 
         .btn-danger:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
+            background: linear-gradient(105deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -8px rgba(239, 68, 68, 0.6);
         }
 
         .input-field {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid rgba(168, 171, 196, 0.3);
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 12px 18px;
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            font-size: 15px;
             transition: all 0.2s ease;
-            background: var(--color-white);
+            background: white;
+            color: #1e293b;
+        }
+
+        .input-field:hover {
+            border-color: #94a3b8;
         }
 
         .input-field:focus {
-            border-color: var(--color-neon);
-            box-shadow: 0 0 0 3px rgba(78, 255, 255, 0.15);
+            border-color: var(--color-gradient-start);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
             outline: none;
+        }
+
+        .input-field::placeholder {
+            color: #94a3b8;
+            font-size: 14px;
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            border-radius: 12px;
-            color: var(--color-light);
-            transition: all 0.2s ease;
-            margin-bottom: 8px;
+            border-radius: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 6px;
+            position: relative;
+            gap: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            border: 1px solid transparent;
         }
 
         .sidebar-link:hover {
-            background: rgba(78, 255, 255, 0.1);
-            color: var(--color-neon);
+            background: rgba(56, 189, 248, 0.15);
+            color: white;
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateX(4px);
         }
 
         .sidebar-link.active {
-            background: rgba(78, 255, 255, 0.15);
-            color: var(--color-neon);
+            background: linear-gradient(90deg,
+                rgba(56, 189, 248, 0.2) 0%,
+                rgba(99, 102, 241, 0.2) 100%
+            );
+            color: white;
             font-weight: 600;
             border-left: 4px solid var(--color-neon);
+            border-radius: 14px 8px 8px 14px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-link span:first-child {
+            font-size: 20px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         .stat-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 4px 20px 0 rgba(16, 26, 43, 0.08);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.02),
+                        0 8px 30px 0 rgba(59, 130, 246, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+            backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg,
+                var(--color-gradient-start),
+                var(--color-gradient-end)
+            );
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
         .stat-card:hover {
-            box-shadow: 0 8px 32px 0 rgba(16, 26, 43, 0.12);
-            transform: translateY(-2px);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 40px -12px rgba(59, 130, 246, 0.25);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
         }
 
         .badge-status {
             display: inline-flex;
             align-items: center;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
-        .badge-draft { background: #d1d5db; color: #374151; }
-        .badge-submitted { background: #fbbf24; color: #92400e; }
-        .badge-review { background: #3b82f6; color: white; }
-        .badge-approved { background: #10b981; color: white; }
-        .badge-rejected { background: #ef4444; color: white; }
+        .badge-draft {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .badge-submitted {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        .badge-review {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .badge-approved {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .badge-rejected {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .badge-revisions_required {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        .badge-resubmitted {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
 
         .table-container {
             overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
         }
 
         .table-container table {
@@ -141,129 +276,344 @@
         }
 
         .table-container th {
-            background-color: #f9fafb;
-            padding: 12px 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 16px 20px;
             text-align: left;
             font-weight: 600;
-            color: #374151;
-            border-bottom: 2px solid #e5e7eb;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .table-container td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .table-container tr {
+            transition: all 0.2s ease;
         }
 
         .table-container tr:hover {
-            background-color: #f9fafb;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+        }
+
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .filter-badge:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .filter-badge.active {
+            background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .animate-pulse-custom {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 #f1f5f9;
+        }
+
+        .sidebar-logo {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(78, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--color-neon);
+            transform: scale(1.05);
+        }
+
+        .message-item {
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .message-success {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .message-info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
-<body class="h-full">
+<body class="h-full bg-gradient-to-br from-gray-50 via-white to-blue-50">
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <div class="w-64 admin-gradient text-white flex-shrink-0">
+        <div class="w-64 admin-gradient text-white flex-shrink-0 overflow-y-auto custom-scrollbar">
             <div class="p-6">
-                <div class="flex items-center space-x-3 mb-8">
-                    <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                        <span class="text-xl" style="color: var(--color-neon);">⚙️</span>
+                <!-- Логотип -->
+                <div class="flex items-center space-x-3 mb-10 group">
+                    <div class="w-12 h-12 rounded-xl sidebar-logo flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-neon">
+                        <span class="text-2xl" style="color: var(--color-neon);">⚙️</span>
                     </div>
                     <div>
-                        <div class="font-bold">Админ-панель</div>
-                        <div class="text-xs opacity-75">Конференция IT-Весна 2026</div>
+                        <div class="font-bold text-lg bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+                            Админ-панель
+                        </div>
+                        <div class="text-xs opacity-80 text-cyan-100 mt-1">
+                            IT-Весна 2026
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <div class="text-xs uppercase tracking-wider opacity-75 mb-3">Главное</div>
-                    <a href="{% url 'conference_admin:dashboard' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                        <span class="mr-3">📊</span>
-                        <span>Панель управления</span>
-                    </a>
-                    <a href="{% url 'conference_admin:statistics' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">
-                        <span class="mr-3">📈</span>
-                        <span>Статистика</span>
-                    </a>
+                <!-- Навигация -->
+                <div class="space-y-8">
+                    <!-- Главное -->
+                    <div class="space-y-2">
+                        <div class="text-xs uppercase tracking-wider opacity-60 mb-3 px-2 flex items-center gap-2">
+                            <span class="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></span>
+                            Главное
+                        </div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'conference_admin:dashboard' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                                <span>📊</span>
+                                <span>Панель управления</span>
+                                {% if request.resolver_match.url_name == 'dashboard' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'conference_admin:statistics' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">
+                                <span>📈</span>
+                                <span>Статистика</span>
+                                {% if request.resolver_match.url_name == 'statistics' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Доклады -->
+                    <div class="space-y-2">
+                        <div class="text-xs uppercase tracking-wider opacity-60 mb-3 px-2 flex items-center gap-2">
+                            <span class="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></span>
+                            Доклады
+                        </div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'conference_admin:report_list' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}">
+                                <span>📄</span>
+                                <span>Все доклады</span>
+                                {% if request.resolver_match.url_name == 'report_list' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Участники -->
+                    <div class="space-y-2">
+                        <div class="text-xs uppercase tracking-wider opacity-60 mb-3 px-2 flex items-center gap-2">
+                            <span class="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></span>
+                            Участники
+                        </div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'conference_admin:author_list' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'author_list' %}active{% endif %}">
+                                <span>👥</span>
+                                <span>Авторы</span>
+                                {% if request.resolver_match.url_name == 'author_list' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'conference_admin:user_list' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+                                <span>👤</span>
+                                <span>Пользователи</span>
+                                {% if request.resolver_match.url_name == 'user_list' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                        </nav>
+                    </div>
+
+                    <!-- Контент -->
+                    <div class="space-y-2">
+                        <div class="text-xs uppercase tracking-wider opacity-60 mb-3 px-2 flex items-center gap-2">
+                            <span class="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></span>
+                            Контент
+                        </div>
+                        <nav class="space-y-1">
+                            <a href="{% url 'conference_admin:manage_sections' %}"
+                               class="sidebar-link {% if request.resolver_match.url_name == 'manage_sections' %}active{% endif %}">
+                                <span>🏷️</span>
+                                <span>Секции</span>
+                                {% if request.resolver_match.url_name == 'manage_sections' %}
+                                <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
+                                {% endif %}
+                            </a>
+                        </nav>
+                    </div>
                 </div>
 
-                <div class="mb-6">
-                    <div class="text-xs uppercase tracking-wider opacity-75 mb-3">Доклады</div>
-                    <a href="{% url 'conference_admin:report_list' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}">
-                        <span class="mr-3">📄</span>
-                        <span>Все доклады</span>
-                    </a>
-                    <a href="{% url 'conference_admin:report_list' %}?status=submitted"
-                       class="sidebar-link">
-                        <span class="mr-3">⏳</span>
-                        <span>На рассмотрении</span>
-                    </a>
-                    <a href="{% url 'conference_admin:report_list' %}?status=review"
-                       class="sidebar-link">
-                        <span class="mr-3">📝</span>
-                        <span>На рецензии</span>
-                    </a>
-                </div>
+                <!-- Нижняя часть сайдбара -->
+                <div class="mt-12 pt-6 border-t border-gray-700/50">
+                    <nav class="space-y-1">
+                        <a href="{% url 'index' %}" class="sidebar-link">
+                            <span>🏠</span>
+                            <span>На главную</span>
+                        </a>
+                        <a href="{% url 'logout' %}" class="sidebar-link">
+                            <span>🚪</span>
+                            <span>Выйти</span>
+                        </a>
+                    </nav>
 
-                <div class="mb-6">
-                    <div class="text-xs uppercase tracking-wider opacity-75 mb-3">Участники</div>
-                    <a href="{% url 'conference_admin:author_list' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'author_list' %}active{% endif %}">
-                        <span class="mr-3">👥</span>
-                        <span>Авторы</span>
-                    </a>
-                    <a href="{% url 'conference_admin:user_list' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
-                        <span class="mr-3">👤</span>
-                        <span>Пользователи</span>
-                    </a>
-                </div>
-
-                <div class="mb-6">
-                    <div class="text-xs uppercase tracking-wider opacity-75 mb-3">Контент</div>
-                    <a href="{% url 'conference_admin:manage_sections' %}"
-                       class="sidebar-link {% if request.resolver_match.url_name == 'manage_sections' %}active{% endif %}">
-                        <span class="mr-3">🏷️</span>
-                        <span>Секции</span>
-                    </a>
-                </div>
-
-                <div class="mt-12 pt-6 border-t border-gray-700">
-                    <a href="{% url 'index' %}" class="sidebar-link">
-                        <span class="mr-3">🏠</span>
-                        <span>На главную</span>
-                    </a>
-                    <a href="{% url 'logout' %}" class="sidebar-link">
-                        <span class="mr-3">🚪</span>
-                        <span>Выйти</span>
-                    </a>
+                    <!-- Версия -->
+                    <div class="mt-8 px-4 py-3 bg-black/20 rounded-xl">
+                        <div class="text-xs opacity-60 flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full"></span>
+                            v2.0.0
+                        </div>
+                        <div class="text-xs opacity-40 mt-1">
+                            Конференция IT-Весна 2026
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 overflow-auto custom-scrollbar bg-gradient-to-br from-gray-50 via-white to-blue-50">
             <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-8 py-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-800">
-                            {% block page_title %}Панель управления{% endblock %}
-                        </h1>
-                        <p class="text-gray-600">
-                            {% block page_subtitle %}Администрирование конференции IT-Весна 2026{% endblock %}
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="text-sm text-gray-600">
-                            <span class="font-medium">{{ user.get_full_name }}</span>
-                            <span class="ml-2 px-2 py-1 bg-gray-100 rounded">
-                                {{ user.get_role_display }}
-                            </span>
+            <div class="header-gradient sticky top-0 z-20 border-b border-gray-200/80 backdrop-blur-xl bg-white/80">
+                <div class="px-8 py-5">
+                    <div class="flex justify-between items-center">
+                        <div class="space-y-1">
+                            <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                                {% block page_title %}Панель управления{% endblock %}
+                            </h1>
+                            <p class="text-sm text-gray-500 flex items-center gap-2">
+                                <span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
+                                {% block page_subtitle %}Администрирование конференции IT-Весна 2026{% endblock %}
+                            </p>
+                        </div>
+
+                        <!-- Профиль пользователя -->
+                        <div class="flex items-center space-x-6">
+                            <div class="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200/60 shadow-sm">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg">
+                                    {{ user.get_full_name|default:user.email|first|upper }}
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-semibold text-gray-800">
+                                        {{ user.get_full_name|default:user.email }}
+                                    </div>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                        <span class="text-xs text-gray-500">
+                                            {{ user.get_role_display|default:"Администратор" }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -271,12 +621,43 @@
 
             <!-- Messages -->
             {% if messages %}
-            <div class="px-8 pt-4">
-                {% for message in messages %}
-                <div class="mb-3 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
-                    {{ message }}
+            <div class="px-8 pt-6">
+                <div class="space-y-3">
+                    {% for message in messages %}
+                    <div class="message-item
+                        {% if message.tags == 'success' %}message-success
+                        {% elif message.tags == 'error' %}message-error
+                        {% else %}message-info{% endif %}">
+                        <div class="flex items-center gap-3 flex-1">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center
+                                {% if message.tags == 'success' %}bg-emerald-200 text-emerald-700
+                                {% elif message.tags == 'error' %}bg-red-200 text-red-700
+                                {% else %}bg-blue-200 text-blue-700{% endif %}">
+                                {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                {% elif message.tags == 'error' %}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                {% else %}
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <span class="font-medium">{{ message }}</span>
+                        </div>
+                        <button onclick="this.closest('.message-item').remove()"
+                                class="p-1.5 rounded-lg hover:bg-black/5 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
             {% endif %}
 
@@ -284,8 +665,35 @@
             <main class="p-8">
                 {% block content %}{% endblock %}
             </main>
+
+            <!-- Footer -->
+            <div class="px-8 pb-6 text-center text-xs text-gray-400">
+                <p>© 2026 Конференция IT-Весна. Все права защищены.</p>
+            </div>
         </div>
     </div>
+
+    <!-- Кастомные скрипты -->
+    <script>
+        // Автоматическое скрытие сообщений - ТОЛЬКО для элементов с классом message-item
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelectorAll('.message-item').forEach(function(message) {
+                    message.style.transition = 'opacity 0.5s, transform 0.5s';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(20px)';
+                    setTimeout(() => message.style.display = 'none', 500);
+                });
+            }, 5000);
+        });
+
+        // Подсветка активного пункта меню
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>
