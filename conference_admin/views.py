@@ -204,10 +204,15 @@ def delete_certificate(request, certificate_id):
 def manage_sections(request):
     """Управление секциями конференции"""
 
-    sections = Section.objects.all().order_by('name')
+    sections = Section.objects.all().order_by('-created_at')
     all_users = User.objects.filter(is_active=True).order_by('last_name', 'first_name')
 
+    # Получаем статистику для отображения в шаблоне
+    total_reports = Report.objects.count()
+    total_jury_members = JuryMember.objects.count()
+
     if request.method == 'POST':
+        # ОБРАБОТКА ДОБАВЛЕНИЯ СЕКЦИИ
         if 'add_section' in request.POST:
             form = SectionForm(request.POST, request.FILES)
             if form.is_valid():
@@ -216,7 +221,17 @@ def manage_sections(request):
                 return redirect('conference_admin:manage_sections')
             else:
                 messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+                # Сохраняем форму с ошибками для отображения в шаблоне
+                context = {
+                    'sections': sections,
+                    'form': form,
+                    'all_users': all_users,
+                    'total_reports': total_reports,
+                    'total_jury_members': total_jury_members,
+                }
+                return render(request, 'conference_admin/manage_sections.html', context)
 
+        # ОБРАБОТКА РЕДАКТИРОВАНИЯ СЕКЦИИ
         elif 'edit_section' in request.POST:
             section_id = request.POST.get('section_id')
             try:
@@ -229,9 +244,20 @@ def manage_sections(request):
                     return redirect('conference_admin:manage_sections')
                 else:
                     messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+                    # Сохраняем форму с ошибками
+                    context = {
+                        'sections': sections,
+                        'form': form,
+                        'all_users': all_users,
+                        'total_reports': total_reports,
+                        'total_jury_members': total_jury_members,
+                    }
+                    return render(request, 'conference_admin/manage_sections.html', context)
             except Exception as e:
                 messages.error(request, f'Ошибка при редактировании: {str(e)}')
+                return redirect('conference_admin:manage_sections')
 
+        # ОБРАБОТКА УДАЛЕНИЯ СЕКЦИИ
         elif 'delete_section' in request.POST:
             section_id = request.POST.get('section_id')
             try:
@@ -252,11 +278,39 @@ def manage_sections(request):
                 messages.error(request, f'Ошибка при удалении: {str(e)}')
 
             return redirect('conference_admin:manage_sections')
+
     else:
+        # GET запрос - показываем пустую форму
         form = SectionForm()
 
     return render(request, 'conference_admin/manage_sections.html', {
         'sections': sections,
+        'form': form,
+        'all_users': all_users,
+        'total_reports': total_reports,
+        'total_jury_members': total_jury_members,
+    })
+
+
+@admin_required
+def edit_section(request, section_id):
+    """Редактирование секции (отдельная страница)"""
+    section = get_object_or_404(Section, id=section_id)
+    all_users = User.objects.filter(is_active=True).order_by('last_name', 'first_name')
+
+    if request.method == 'POST':
+        form = SectionForm(request.POST, request.FILES, instance=section)
+        if form.is_valid():
+            section = form.save()
+            messages.success(request, f'Секция "{section.name}" успешно обновлена.')
+            return redirect('conference_admin:manage_sections')
+        else:
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+    else:
+        form = SectionForm(instance=section)
+
+    return render(request, 'conference_admin/edit_section.html', {
+        'section': section,
         'form': form,
         'all_users': all_users,
     })

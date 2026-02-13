@@ -76,40 +76,32 @@ class SectionForm(forms.ModelForm):
         fields = ['name', 'description', 'icon', 'date', 'time', 'location', 'jury_chairman']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control',  # БЫЛО: form-input
                 'placeholder': 'Название секции'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-input',
+                'class': 'form-control',  # БЫЛО: form-input
                 'rows': 4,
                 'placeholder': 'Описание секции'
             }),
             'date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date'
+                'class': 'form-control flatpickr-input',  # БЫЛО: form-input
+                'type': 'text',  # БЫЛО: type='date' - меняем на text для flatpickr
+                'placeholder': 'Дата'
             }),
             'time': forms.TimeInput(attrs={
-                'class': 'form-input',
-                'type': 'time'
+                'class': 'form-control',  # БЫЛО: form-input
+                'type': 'time',
+                'placeholder': 'Время'
             }),
             'location': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Аудитория, зал, онлайн'
+                'class': 'form-control',  # БЫЛО: form-input
+                'placeholder': 'Место проведения'
             }),
-            'jury_chairman': forms.Select(attrs={'class': 'form-select'}),
+            'jury_chairman': forms.Select(attrs={
+                'class': 'form-select'  # ЭТО ПРАВИЛЬНО
+            }),
         }
-
-    def clean_icon(self):
-        icon = self.cleaned_data.get('icon')
-        if icon:
-            if icon.size > 2 * 1024 * 1024:
-                raise ValidationError('Файл иконки слишком большой. Максимальный размер: 2MB')
-
-            allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg']
-            if not any(icon.name.lower().endswith(ext) for ext in allowed_extensions):
-                raise ValidationError('Неподдерживаемый формат изображения. Используйте JPG, PNG, GIF или SVG.')
-
-        return icon
 
 
 # 4. Форма для изменения роли пользователя

@@ -29,7 +29,7 @@ urlpatterns = [
     path('authors/', views.author_list_admin, name='author_list'),
     path('users/', views.user_list_admin, name='user_list'),
     path('users/<uuid:user_id>/role/', views.change_user_role, name='change_user_role'),
-
+    path('sections/<uuid:section_id>/edit/', views.edit_section, name='edit_section'),  # НОВЫЙ URL
     # Статистика
     path('statistics/', views.statistics, name='statistics'),
     path('statistics/api/', views.statistics_api, name='statistics_api'),

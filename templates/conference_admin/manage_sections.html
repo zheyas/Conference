@@ -4,9 +4,11 @@
 {% block page_title %}Управление секциями конференции{% endblock %}
 {% block page_subtitle %}Создание, редактирование и организация секций{% endblock %}
 
-<!-- Подключаем Bootstrap Icons -->
+<!-- Подключаем Bootstrap Icons и Flatpickr для красивых календарей -->
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 <style>
     /* ========== ОСНОВНЫЕ СТИЛИ ========== */
     :root {
@@ -16,6 +18,7 @@
         --bs-danger: #dc3545;
         --bs-warning: #ffc107;
         --bs-info: #0dcaf0;
+        --bs-purple: #6f42c1;
     }
 
     /* Анимации */
@@ -23,17 +26,12 @@
         0%, 100% { transform: translateY(0px); }
         50% { transform: translateY(-5px); }
     }
-    
-    @keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.2); }
-        50% { box-shadow: 0 0 20px 5px rgba(13, 110, 253, 0.3); }
-    }
-    
+
     @keyframes slideIn {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
+
     @keyframes scaleIn {
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
@@ -46,11 +44,11 @@
         box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
     }
-    
+
     .card:hover {
         box-shadow: 0 20px 35px -8px rgba(13,110,253,0.1);
     }
-    
+
     .bg-gradient-primary {
         background: linear-gradient(145deg, #0d6efd, #0b5ed7);
     }
@@ -65,24 +63,69 @@
         background: white;
         transition: all 0.2s ease;
     }
-    
+
     .form-floating > .form-control:focus,
     .form-floating > .form-select:focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
     }
-    
+
     .form-floating > label {
         padding: 1rem 0.75rem;
         color: #64748b;
     }
-    
+
     .form-floating > .form-control:focus ~ label,
     .form-floating > .form-control:not(:placeholder-shown) ~ label,
     .form-floating > .form-select ~ label {
         color: #0d6efd;
         opacity: 1;
         transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem);
+    }
+
+    /* ========== СТИЛИ ДЛЯ КАЛЕНДАРЯ И ВРЕМЕНИ ========== */
+    .flatpickr-input {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .flatpickr-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        outline: none;
+    }
+
+    input[type="time"] {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 0.75rem;
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+
+    input[type="time"]:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        outline: none;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%230d6efd' viewBox='0 0 16 16'%3E%3Cpath d='M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z'/%3E%3Cpath d='M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z'/%3E%3C/svg%3E");
+        background-size: 18px;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
     }
 
     /* ========== КАСТОМНЫЙ SELECT ========== */
@@ -92,37 +135,53 @@
         padding-right: 2.5rem;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
-        height: 48px;
+        height: 54px;
         color: #1e293b;
+        font-size: 0.95rem;
     }
-    
+
     select.form-select:focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
     }
 
+    select.form-select option {
+        padding: 12px 16px;
+        background: white;
+        color: #1e293b;
+    }
+
+    select.form-select option:hover {
+        background: #e7f1ff;
+    }
+
+    select.form-select option:checked {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: white;
+    }
+
     /* ========== СТИЛЬНЫЙ ДРОПЗОН ========== */
     .file-dropzone {
         border: 2px dashed #cbd5e1;
-        border-radius: 20px;
-        padding: 1.5rem 1rem;
+        border-radius: 16px;
+        padding: 1.25rem;
         background: #f8fafc;
         transition: all 0.3s ease;
         cursor: pointer;
         position: relative;
     }
-    
+
     .file-dropzone:hover {
         border-color: #0d6efd;
         background: #f0f7ff;
     }
-    
+
     .file-dropzone.dragover {
         border-color: #0d6efd;
         background: #e7f1ff;
         transform: scale(1.01);
     }
-    
+
     .file-dropzone input[type="file"] {
         position: absolute;
         top: 0;
@@ -132,21 +191,21 @@
         opacity: 0;
         cursor: pointer;
     }
-    
+
     .file-dropzone-icon {
-        width: 56px;
-        height: 56px;
+        width: 48px;
+        height: 48px;
         background: white;
-        border-radius: 16px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
         color: #0d6efd;
         border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
-    
+
     .file-dropzone:hover .file-dropzone-icon {
         transform: scale(1.1);
         background: #0d6efd;
@@ -157,9 +216,9 @@
     /* ========== ПРЕВЬЮ ИКОНКИ ========== */
     .icon-preview,
     .icon-preview-empty {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
         object-fit: cover;
         border: 1px solid #e2e8f0;
         background: white;
@@ -167,13 +226,13 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .icon-preview-empty i {
-        font-size: 2rem;
+        font-size: 1.75rem;
         color: #94a3b8;
     }
 
-    /* ========== КАРТОЧКА СЕКЦИИ ========== */
+    /* ========== КАРТОЧКА СЕКЦИИ - 3 В РЯД ========== */
     .section-card {
         background: white;
         border-radius: 20px;
@@ -186,14 +245,15 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
     }
-    
+
     .section-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(13,110,253,0.15);
+        box-shadow: 0 20px 30px -8px rgba(13,110,253,0.15);
         border-color: var(--bs-primary);
     }
-    
+
     .section-card::before {
         content: '';
         position: absolute;
@@ -206,7 +266,7 @@
         transition: transform 0.4s ease;
         transform-origin: left;
     }
-    
+
     .section-card:hover::before {
         transform: scaleX(1);
     }
@@ -215,80 +275,71 @@
     .badge-custom {
         display: inline-flex;
         align-items: center;
-        padding: 0.5rem 1rem;
+        padding: 0.35rem 0.75rem;
         border-radius: 50px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
         letter-spacing: 0.3px;
     }
-    
+
     .badge-blue {
         background: linear-gradient(135deg, #cfe2ff, #b6d4fe);
         color: #084298;
         border: 1px solid #9ec5fe;
     }
-    
-    .badge-purple {
-        background: linear-gradient(135deg, #e2d9f3, #d1c4e9);
-        color: #4a1b8c;
-        border: 1px solid #b8a2e0;
-    }
 
     /* ========== КНОПКИ ========== */
+    .btn-jury,
+    .btn-edit,
+    .btn-delete {
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        color: white;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .btn-jury {
         background: linear-gradient(135deg, #6f42c1, #6610f2);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
     }
-    
+
     .btn-jury:hover {
         background: linear-gradient(135deg, #6610f2, #520dc2);
-        color: white;
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(102, 16, 242, 0.3);
     }
-    
+
     .btn-edit {
         background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
     }
-    
+
     .btn-edit:hover {
         background: linear-gradient(135deg, #0b5ed7, #0a58ca);
-        color: white;
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(13, 110, 253, 0.3);
     }
-    
+
     .btn-delete {
         background: linear-gradient(135deg, #dc3545, #bb2d3b);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 12px;
-        transition: all 0.3s ease;
     }
-    
+
     .btn-delete:hover {
         background: linear-gradient(135deg, #bb2d3b, #a52834);
-        color: white;
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(220, 53, 69, 0.3);
     }
-    
+
     .btn-primary {
         background: linear-gradient(145deg, #0d6efd, #0b5ed7);
         border: none;
         transition: all 0.3s ease;
     }
-    
+
     .btn-primary:hover {
         background: linear-gradient(145deg, #0b5ed7, #0a58ca);
         transform: translateY(-2px);
@@ -303,19 +354,19 @@
         padding: 0.5rem 1.25rem;
         display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
         transition: all 0.3s ease;
     }
-    
+
     .stat-pill:hover {
         background: white;
         border-color: var(--bs-primary);
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(13,110,253,0.1);
     }
-    
+
     .stat-value {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--bs-primary);
         line-height: 1;
@@ -325,38 +376,27 @@
     .empty-state {
         background: white;
         border: 2px dashed #dee2e6;
-        border-radius: 30px;
-        padding: 60px 40px;
+        border-radius: 24px;
+        padding: 40px 32px;
         text-align: center;
         transition: all 0.3s ease;
     }
-    
+
     .empty-state:hover {
         border-color: var(--bs-primary);
         background: #f8f9fa;
     }
-    
+
     .empty-state-icon {
-        width: 100px;
-        height: 100px;
+        width: 80px;
+        height: 80px;
         background: linear-gradient(135deg, #e7f1ff, #cfe2ff);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 24px;
+        margin: 0 auto 20px;
         animation: float 6s ease-in-out infinite;
-    }
-
-    /* ========== МОДАЛЬНОЕ ОКНО ========== */
-    .modal-custom {
-        animation: scaleIn 0.3s ease-out;
-    }
-    
-    .modal-custom .modal-content {
-        border-radius: 24px;
-        border: none;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
     /* ========== АНИМАЦИИ ДЛЯ КАРТОЧЕК ========== */
@@ -368,19 +408,12 @@
     .section-card:nth-child(6) { animation-delay: 0.35s; }
 
     /* ========== АДАПТИВНОСТЬ ========== */
-    @media (max-width: 992px) {
-        .add-section-card {
-            position: static;
-            margin-bottom: 30px;
-        }
-    }
-    
     @media (max-width: 768px) {
         .stat-pill {
             padding: 0.4rem 1rem;
         }
         .stat-value {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
         }
     }
 </style>
@@ -412,7 +445,7 @@
                     </div>
                     <span class="fw-medium">{{ message }}</span>
                 </div>
-                <button onclick="this.closest('.message-item').remove()" 
+                <button onclick="this.closest('.message-item').remove()"
                         class="btn btn-sm btn-link text-secondary p-1">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -492,14 +525,10 @@
                             <div class="file-dropzone" id="iconDropzone">
                                 <div class="text-center">
                                     <div class="file-dropzone-icon mx-auto">
-                                        <i class="bi bi-cloud-upload fs-3"></i>
+                                        <i class="bi bi-cloud-upload fs-4"></i>
                                     </div>
-                                    <p class="mb-1 small fw-medium text-primary">Нажмите для выбора файла</p>
-                                    <p class="text-muted small mb-2">или перетащите сюда</p>
-                                    <span class="badge bg-light text-secondary px-3 py-2 rounded-pill small">
-                                        PNG, JPG, SVG • до 2MB
-                                    </span>
-                                    <div id="fileName" class="mt-2 small text-primary fw-medium d-none"></div>
+                                    <p class="mb-0 small fw-medium text-primary">Выберите файл или перетащите</p>
+                                    <div id="fileName" class="mt-1 small text-primary fw-medium d-none"></div>
                                 </div>
                                 {{ form.icon }}
                             </div>
@@ -507,7 +536,7 @@
                             <div id="iconPreviewContainer" class="mt-2 d-flex align-items-center gap-2">
                                 <img id="iconPreview" class="icon-preview d-none" alt="Превью">
                                 <div id="iconPlaceholder" class="icon-preview-empty">
-                                    <i class="bi bi-image text-secondary fs-3"></i>
+                                    <i class="bi bi-image text-secondary"></i>
                                 </div>
                                 <span class="small text-muted">200×200px, макс. 2MB</span>
                             </div>
@@ -549,7 +578,7 @@
             <!-- Заголовок и статистика -->
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" 
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
                          style="width: 48px; height: 48px;">
                         <i class="bi bi-grid-3x3-gap-fill text-primary fs-5"></i>
                     </div>
@@ -559,7 +588,7 @@
                     </div>
                     {% if sections %}
                     <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
-                        {{ sections|length }} {{ sections|length|pluralize:"секция,секций" }}
+                        {{ sections|length }} {{ sections|length|pluralize:"секция,секций,секции" }}
                     </span>
                     {% endif %}
                 </div>
@@ -581,104 +610,98 @@
                 {% endif %}
             </div>
 
-            <!-- Список секций -->
+            <!-- Список секций - КРАСИВЫЕ КАРТОЧКИ ПО 3 В РЯД -->
             {% if sections %}
             <div class="row g-3">
                 {% for section in sections %}
-                <div class="col-md-6 col-xl-4">
+                <div class="col-xl-4 col-md-6">
                     <div class="section-card">
                         <!-- Бейдж статуса -->
-                        <div class="position-absolute top-0 end-0 m-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="badge-custom badge-blue">
                                 <span class="rounded-circle bg-primary me-1" style="width: 6px; height: 6px; display: inline-block;"></span>
                                 Активна
                             </span>
+                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">
+                                {{ section.reports.count }} {{ section.reports.count|pluralize:"доклад,доклада,докладов" }}
+                            </span>
                         </div>
 
-                        <!-- Шапка с иконкой -->
+                        <!-- Название и иконка -->
                         <div class="d-flex gap-3 mb-3">
                             <div class="position-relative flex-shrink-0">
                                 {% if section.icon %}
-                                <img src="{{ section.icon.url }}" alt="{{ section.name }}" 
-                                     class="rounded-3 border border-2 border-white shadow-sm" 
-                                     style="width: 64px; height: 64px; object-fit: cover;">
+                                <img src="{{ section.icon.url }}" alt="{{ section.name }}"
+                                     class="rounded-3 border border-2 border-white shadow-sm"
+                                     style="width: 56px; height: 56px; object-fit: cover;">
                                 {% else %}
                                 <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border border-2 border-white shadow-sm"
-                                     style="width: 64px; height: 64px;">
-                                    <i class="bi bi-images text-secondary fs-2"></i>
+                                     style="width: 56px; height: 56px;">
+                                    <i class="bi bi-images text-secondary fs-3"></i>
                                 </div>
                                 {% endif %}
-                                <div class="position-absolute bottom-0 end-0 translate-middle-y badge rounded-pill bg-primary border border-2 border-white"
-                                     style="width: 24px; height: 24px; padding: 0;">
-                                    <span class="d-flex align-items-center justify-content-center text-white small">
-                                        {{ section.reports.count }}
-                                    </span>
-                                </div>
                             </div>
-                            <div class="flex-grow-1 min-w-0">
-                                <h5 class="fw-bold text-truncate mb-1">{{ section.name }}</h5>
-                                <div class="d-flex flex-wrap gap-1 mb-1">
-                                    <span class="badge-custom badge-blue py-1 px-2 small">
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-1" style="font-size: 1.1rem;">{{ section.name }}</h5>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
                                         <i class="bi bi-calendar3 me-1"></i>
                                         {{ section.date|date:"d.m.Y" }}
                                     </span>
-                                    <span class="badge-custom badge-blue py-1 px-2 small">
+                                    <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
                                         <i class="bi bi-clock me-1"></i>
                                         {{ section.time|time:"H:i" }}
                                     </span>
                                 </div>
-                                <div class="small text-muted text-truncate">
-                                    <i class="bi bi-geo-alt me-1"></i>
-                                    {{ section.location|truncatechars:20 }}
-                                </div>
                             </div>
                         </div>
 
-                        <!-- Описание -->
-                        <div class="small text-secondary bg-light bg-opacity-50 p-3 rounded-3 mb-3">
-                            {{ section.description|truncatechars:80 }}
+                        <!-- Место проведения -->
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            {{ section.location|truncatechars:30 }}
+                        </div>
+
+                        <!-- Описание (обрезанное) -->
+                        <div class="small text-secondary bg-light bg-opacity-50 p-2 rounded-3 mb-2" style="font-size: 0.8rem;">
+                            {{ section.description|truncatechars:70 }}
                         </div>
 
                         <!-- Информация о жюри -->
-                        <div class="mb-3">
+                        <div class="mb-2">
                             {% if section.jury_chairman %}
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="small text-secondary" style="width: 80px;">Председатель:</span>
-                                <span class="badge-custom badge-purple py-1 px-2 small">
-                                    <i class="bi bi-person-circle me-1"></i>
-                                    {{ section.jury_chairman.get_short_name }}
-                                </span>
+                            <div class="d-flex align-items-center mb-1 small">
+                                <i class="bi bi-person-badge me-1" style="color: #6f42c1;"></i>
+                                <span class="text-secondary me-1">Председатель:</span>
+                                <span class="fw-medium">{{ section.jury_chairman.get_short_name }}</span>
                             </div>
                             {% endif %}
                             {% with jury_count=section.jury_members_list.count %}
                             {% if jury_count > 0 %}
-                            <div class="d-flex align-items-center">
-                                <span class="small text-secondary" style="width: 80px;">Члены жюри:</span>
-                                <span class="badge-custom badge-purple py-1 px-2 small">
-                                    <i class="bi bi-people me-1"></i>
-                                    {{ jury_count }} чел.
-                                </span>
+                            <div class="d-flex align-items-center small">
+                                <i class="bi bi-people-fill me-1" style="color: #6f42c1;"></i>
+                                <span class="text-secondary me-1">Жюри:</span>
+                                <span class="fw-medium">{{ jury_count }} {{ jury_count|pluralize:"человек,человека,человек" }}</span>
                             </div>
                             {% endif %}
                             {% endwith %}
                         </div>
 
-                        <!-- Действия -->
-                        <div class="d-flex align-items-center justify-content-between pt-3 border-top">
-                            <a href="{% url 'conference_admin:report_list' %}?section={{ section.id }}" 
+                        <!-- Действия - КНОПКИ УПРАВЛЕНИЯ -->
+                        <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
+                            <a href="{% url 'conference_admin:report_list' %}?section={{ section.id }}"
                                class="small text-decoration-none d-flex align-items-center gap-1 text-primary">
-                                <span>{{ section.reports.count }} докл.</span>
-                                <i class="bi bi-arrow-right-short"></i>
+                                Все доклады <i class="bi bi-arrow-right-short"></i>
                             </a>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-1">
                                 <a href="{% url 'conference_admin:manage_section_jury' section_id=section.id %}"
                                    class="btn-jury" title="Управление жюри">
                                     <i class="bi bi-people"></i>
                                 </a>
-                                <button onclick="editSection('{{ section.id }}')"
-                                        class="btn-edit" title="Редактировать">
+                                <a href="{% url 'conference_admin:edit_section' section.id %}"
+                                   class="btn-edit" title="Редактировать">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </a>
                                 <form method="post" onsubmit="return confirm('Удалить секцию «{{ section.name }}»?')" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="section_id" value="{{ section.id }}">
@@ -699,10 +722,10 @@
                 <div class="empty-state-icon">
                     <i class="bi bi-grid-3x3-gap-fill text-primary fs-1"></i>
                 </div>
-                <h3 class="h4 fw-bold mb-2">Здесь пока нет секций</h3>
-                <p class="text-muted mb-4">Создайте первую секцию конференции, заполнив форму слева</p>
+                <h3 class="h5 fw-bold mb-2">Здесь пока нет секций</h3>
+                <p class="text-muted small mb-3">Создайте первую секцию конференции, заполнив форму слева</p>
                 <button onclick="document.querySelector('#sectionForm').scrollIntoView({behavior: 'smooth'})"
-                        class="btn btn-primary rounded-pill px-5 py-2 fw-semibold">
+                        class="btn btn-primary rounded-pill px-4 py-2 fw-semibold btn-sm">
                     <i class="bi bi-plus-circle me-2"></i>
                     Создать секцию
                 </button>
@@ -712,121 +735,34 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content modal-custom p-3">
-            <div class="modal-header border-0 pb-0">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-3 bg-primary bg-gradient d-flex align-items-center justify-content-center" 
-                         style="width: 48px; height: 48px;">
-                        <i class="bi bi-pencil-square text-white fs-4"></i>
-                    </div>
-                    <div>
-                        <h5 class="modal-title fw-bold">Редактировать секцию</h5>
-                        <p class="small text-muted mb-0">Измените информацию о секции конференции</p>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            
-            <div class="modal-body">
-                <form method="post" enctype="multipart/form-data" id="editForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="section_id" id="editSectionId">
-                    <input type="hidden" name="edit_section" value="1">
-
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="form-floating">
-                                {{ form.name }}
-                                <label><i class="bi bi-card-text me-2"></i>Название секции *</label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                {{ form.date }}
-                                <label><i class="bi bi-calendar3 me-2"></i>Дата *</label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                {{ form.time }}
-                                <label><i class="bi bi-clock me-2"></i>Время *</label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="form-floating">
-                                {{ form.location }}
-                                <label><i class="bi bi-geo-alt me-2"></i>Место проведения *</label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="form-floating">
-                                {{ form.description }}
-                                <label><i class="bi bi-text-paragraph me-2"></i>Описание *</label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Иконка/логотип</label>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="flex-grow-1">
-                                    <div class="file-dropzone p-3">
-                                        <div class="text-center">
-                                            <div class="file-dropzone-icon mx-auto" style="width: 40px; height: 40px;">
-                                                <i class="bi bi-cloud-upload"></i>
-                                            </div>
-                                            <p class="small text-muted mb-0">
-                                                <span class="text-primary">Выберите файл</span> или перетащите
-                                            </p>
-                                        </div>
-                                        {{ form.icon }}
-                                    </div>
-                                </div>
-                                <div id="currentIcon" class="flex-shrink-0 rounded-3 bg-light d-flex align-items-center justify-content-center"
-                                     style="width: 64px; height: 64px;">
-                                    <i class="bi bi-image text-secondary fs-2"></i>
-                                </div>
-                            </div>
-                            <div class="form-text small">Оставьте пустым для сохранения текущей иконки</div>
-                        </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Председатель жюри</label>
-                            <div class="position-relative">
-                                {{ form.jury_chairman }}
-                                <i class="bi bi-chevron-down position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
-                    Отмена
-                </button>
-                <button type="submit" form="editForm" name="edit_section"
-                        class="btn btn-primary rounded-pill px-5">
-                    <i class="bi bi-check-lg me-2"></i>
-                    Сохранить
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Подключаем Bootstrap JS для модального окна -->
+<!-- Подключаем Bootstrap JS и Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
 
 <script>
-// ========== ПРЕВЬЮ ИКОНКИ ПРИ ЗАГРУЗКЕ ==========
+// ========== ИНИЦИАЛИЗАЦИЯ FLATPICKR ==========
 document.addEventListener('DOMContentLoaded', function() {
+    // Красивый календарь
+    flatpickr(".flatpickr-input", {
+        locale: "ru",
+        dateFormat: "d.m.Y",
+        allowInput: true,
+        theme: "material_blue",
+        animate: true
+    });
+
+    // Устанавливаем текущее время для пустого поля
+    document.querySelectorAll('input[type="time"]').forEach(function(input) {
+        if (!input.value) {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            input.value = `${hours}:${minutes}`;
+        }
+    });
+
+    // Превью иконки
     const iconInput = document.querySelector('input[type="file"][name="icon"]');
     const iconPreview = document.getElementById('iconPreview');
     const iconPlaceholder = document.getElementById('iconPlaceholder');
@@ -883,41 +819,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ========== РЕДАКТИРОВАНИЕ СЕКЦИИ ==========
-function editSection(sectionId) {
-    const modal = new bootstrap.Modal(document.getElementById('editModal'));
-    
-    fetch(`/conference-admin/sections/${sectionId}/data/`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('editSectionId').value = sectionId;
-            document.getElementById('editName').value = data.name || '';
-            document.getElementById('editDescription').value = data.description || '';
-            document.getElementById('editDate').value = data.date || '';
-            document.getElementById('editTime').value = data.time || '';
-            document.getElementById('editLocation').value = data.location || '';
-            
-            const chairmanSelect = document.getElementById('editJuryChairman');
-            if (chairmanSelect) {
-                chairmanSelect.value = data.jury_chairman || '';
-            }
-
-            const currentIconDiv = document.getElementById('currentIcon');
-            if (data.icon_url) {
-                currentIconDiv.innerHTML = `<img src="${data.icon_url}" alt="Иконка" style="width: 100%; height: 100%; object-fit: cover;" class="rounded-3">`;
-            } else {
-                currentIconDiv.innerHTML = '<i class="bi bi-image text-secondary fs-2"></i>';
-            }
-            
-            modal.show();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Ошибка при загрузке данных секции');
-        });
-}
-
-// Автоскрытие сообщений
+// Автоскрытие сообщений через 5 секунд
 setTimeout(function() {
     document.querySelectorAll('.message-item').forEach(function(message) {
         message.style.transition = 'opacity 0.5s, transform 0.5s';
