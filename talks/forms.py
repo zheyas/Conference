@@ -1,12 +1,9 @@
+# talks/forms.py
 from django import forms
 from .models import Report, Section
 
 
 class ReportForm(forms.ModelForm):
-    # Уберите section из явного определения, если оно уже есть в модели
-    # section будет автоматически подхвачен из Meta.fields
-
-    # Измените content_file на report_file (или оба поля, если нужно)
     report_file = forms.FileField(
         widget=forms.FileInput(attrs={
             'class': 'input-field',
@@ -16,7 +13,6 @@ class ReportForm(forms.ModelForm):
         help_text='Текст доклада в формате DOC, DOCX или PDF'
     )
 
-    # Опционально: добавьте поле для презентации
     presentation_file = forms.FileField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -27,7 +23,6 @@ class ReportForm(forms.ModelForm):
         help_text='Презентация в формате PPT, PPTX или PDF'
     )
 
-    # Добавьте поле abstract, если его нет в форме
     abstract = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'input-field',
@@ -41,16 +36,13 @@ class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
         fields = ['title', 'abstract', 'section', 'report_file', 'presentation_file']
-        # Или fields = '__all__', но тогда будут все поля модели
 
     def clean_report_file(self):
         file = self.cleaned_data.get('report_file')
         if file:
-            # Проверка размера файла (максимум 10MB)
             if file.size > 10 * 1024 * 1024:
                 raise forms.ValidationError('Файл слишком большой. Максимальный размер: 10MB')
 
-            # Проверка расширения
             allowed_extensions = ['.pdf', '.doc', '.docx']
             if not any(file.name.lower().endswith(ext) for ext in allowed_extensions):
                 raise forms.ValidationError('Неподдерживаемый формат файла. Используйте PDF, DOC или DOCX.')
@@ -60,13 +52,90 @@ class ReportForm(forms.ModelForm):
     def clean_presentation_file(self):
         file = self.cleaned_data.get('presentation_file')
         if file:
-            # Проверка размера файла (максимум 10MB)
             if file.size > 10 * 1024 * 1024:
                 raise forms.ValidationError('Файл презентации слишком большой. Максимальный размер: 10MB')
 
-            # Проверка расширения
             allowed_extensions = ['.pdf', '.ppt', '.pptx']
             if not any(file.name.lower().endswith(ext) for ext in allowed_extensions):
                 raise forms.ValidationError('Неподдерживаемый формат файла. Используйте PDF, PPT или PPTX.')
 
         return file
+
+
+class ReportResubmitForm(forms.ModelForm):
+    """Форма для повторной отправки доклада после доработок"""
+
+    revision_description = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'input-field',
+            'rows': 6,
+            'placeholder': 'Опишите, какие изменения вы внесли в доклад на основе замечаний...'
+        }),
+        label='Описание внесенных изменений',
+        required=True,
+        help_text='Подробно опишите, какие именно исправления и доработки были выполнены'
+    )
+
+    report_file = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'input-field',
+            'accept': '.pdf,.doc,.docx'
+        }),
+        label='Обновленный текст доклада',
+        help_text='Загрузите исправленную версию доклада (если файл был изменен)'
+    )
+
+    presentation_file = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'input-field',
+            'accept': '.pdf,.ppt,.pptx'
+        }),
+        label='Обновленная презентация (опционально)',
+        help_text='Загрузите исправленную версию презентации (если файл был изменен)'
+    )
+
+    class Meta:
+        model = Report
+        fields = ['title', 'abstract', 'keywords', 'report_file', 'presentation_file', 'revision_description']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'input-field',
+                'placeholder': 'Название доклада'
+            }),
+            'abstract': forms.Textarea(attrs={
+                'class': 'input-field',
+                'rows': 8,
+                'placeholder': 'Аннотация доклада...'
+            }),
+            'keywords': forms.TextInput(attrs={
+                'class': 'input-field',
+                'placeholder': 'Ключевые слова через запятую'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Делаем поля необязательными при повторной отправке
+        self.fields['report_file'].required = False
+        self.fields['revision_description'].required = True
+
+        # Если есть существующий файл, показываем подсказку
+        if self.instance and self.instance.pk:
+            if self.instance.report_file:
+                self.fields[
+                    'report_file'].help_text = f'Текущий файл: {self.instance.report_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
+            if self.instance.presentation_file:
+                self.fields[
+                    'presentation_file'].help_text = f'Текущий файл: {self.instance.presentation_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        report_file = cleaned_data.get('report_file')
+
+        # Проверяем, что либо загружен новый файл, либо есть существующий
+        if not report_file and self.instance and not self.instance.report_file:
+            raise forms.ValidationError('Необходимо загрузить файл доклада.')
+
+        return cleaned_data

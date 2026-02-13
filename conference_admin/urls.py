@@ -14,8 +14,6 @@ urlpatterns = [
     # Управление докладами
     path('reports/', views.report_list_admin, name='report_list'),
     path('reports/<uuid:report_id>/', views.report_detail_admin, name='report_detail'),
-    path('reports/<uuid:report_id>/review/', views.create_review, name='create_review'),
-    path('reviews/<uuid:review_id>/edit/', views.edit_review, name='edit_review'),
 
     # Грамоты и сертификаты
     path('reports/<uuid:report_id>/certificates/', views.manage_certificates, name='manage_certificates'),
@@ -31,7 +29,7 @@ urlpatterns = [
     path('authors/', views.author_list_admin, name='author_list'),
     path('users/', views.user_list_admin, name='user_list'),
     path('users/<uuid:user_id>/role/', views.change_user_role, name='change_user_role'),
-
+    path('sections/<uuid:section_id>/edit/', views.edit_section, name='edit_section'),  # НОВЫЙ URL
     # Статистика
     path('statistics/', views.statistics, name='statistics'),
     path('statistics/api/', views.statistics_api, name='statistics_api'),

@@ -1,0 +1,493 @@
+{% extends 'conference_admin/base.html' %}
+
+{% block title %}Редактирование секции - {{ section.name }}{% endblock %}
+{% block page_title %}Редактирование секции{% endblock %}
+{% block page_subtitle %}{{ section.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<style>
+    /* ========== СТИЛИ ДЛЯ СТРАНИЦЫ РЕДАКТИРОВАНИЯ ========== */
+    :root {
+        --bs-primary: #0d6efd;
+        --bs-primary-rgb: 13, 110, 253;
+    }
+
+    /* Анимации */
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Карточка редактирования */
+    .edit-card {
+        background: white;
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: 0 15px 35px -10px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+        animation: scaleIn 0.4s ease-out;
+    }
+
+    /* Поля с плавающей подписью */
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+        transition: all 0.2s ease;
+    }
+
+    .form-floating > .form-control:focus,
+    .form-floating > .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+    }
+
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+        color: #64748b;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label,
+    .form-floating > .form-select ~ label {
+        color: #0d6efd;
+        opacity: 1;
+        transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem);
+    }
+
+    /* Календарь */
+    .flatpickr-input {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .flatpickr-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        outline: none;
+    }
+
+    /* Time picker */
+    input[type="time"] {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem 0.75rem;
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+
+    input[type="time"]:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        outline: none;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%230d6efd' viewBox='0 0 16 16'%3E%3Cpath d='M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z'/%3E%3Cpath d='M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z'/%3E%3C/svg%3E");
+        background-size: 18px;
+        background-position: center;
+        background-repeat: no-repeat;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+
+    /* Кастомный select */
+    select.form-select {
+        appearance: none;
+        background-image: none;
+        padding-right: 2.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        height: 54px;
+        color: #1e293b;
+        font-size: 0.95rem;
+    }
+
+    select.form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+    }
+
+    /* Дропзон */
+    .file-dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 1.25rem;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .file-dropzone:hover {
+        border-color: #0d6efd;
+        background: #f0f7ff;
+    }
+
+    .file-dropzone input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-dropzone-icon {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+        color: #0d6efd;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .file-dropzone:hover .file-dropzone-icon {
+        transform: scale(1.1);
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+
+    /* Превью иконки */
+    .icon-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+        background: white;
+    }
+
+    /* Кнопки */
+    .btn-primary {
+        background: linear-gradient(145deg, #0d6efd, #0b5ed7);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(145deg, #0b5ed7, #0a58ca);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(13,110,253,0.4);
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
+        border-color: #cbd5e1;
+    }
+
+    /* Хлебные крошки */
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb-item a {
+        color: #64748b;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #0d6efd;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 500;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .edit-card {
+            padding: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <!-- Хлебные крошки -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'conference_admin:manage_sections' %}">
+                            <i class="bi bi-grid-3x3-gap-fill me-1"></i>
+                            Секции
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ section.name|truncatechars:30 }}
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- Карточка редактирования -->
+            <div class="edit-card">
+                <!-- Заголовок -->
+                <div class="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom">
+                    <div class="rounded-3 bg-primary bg-gradient d-flex align-items-center justify-content-center"
+                         style="width: 56px; height: 56px;">
+                        <i class="bi bi-pencil-square text-white fs-4"></i>
+                    </div>
+                    <div>
+                        <h1 class="h3 fw-bold mb-1">Редактировать секцию</h1>
+                        <p class="text-muted small mb-0">
+                            Измените информацию о секции «{{ section.name }}»
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Форма редактирования -->
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="edit_section" value="1">
+
+                    <!-- Ошибки формы -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger d-flex align-items-start gap-2 p-3 rounded-3 mb-4">
+                        <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                        <div class="small">
+                            <strong>Ошибка!</strong> Проверьте правильность заполнения.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Название секции -->
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="name" name="name"
+                               placeholder="Название секции" value="{{ section.name }}" required>
+                        <label><i class="bi bi-card-text me-2"></i>Название секции *</label>
+                    </div>
+
+                    <!-- Дата и время -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control flatpickr-input" id="date" name="date"
+                                       placeholder="Дата" value="{{ section.date|date:'d.m.Y' }}" required>
+                                <label><i class="bi bi-calendar3 me-2"></i>Дата *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="time" class="form-control" id="time" name="time"
+                                       placeholder="Время" value="{{ section.time|time:'H:i' }}" step="60" required>
+                                <label><i class="bi bi-clock me-2"></i>Время *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Место проведения -->
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="location" name="location"
+                               placeholder="Место проведения" value="{{ section.location }}" required>
+                        <label><i class="bi bi-geo-alt me-2"></i>Место проведения *</label>
+                    </div>
+
+                    <!-- Иконка секции -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-image text-primary"></i>
+                            Иконка секции
+                        </label>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="flex-grow-1">
+                                <div class="file-dropzone" id="iconDropzone">
+                                    <div class="text-center">
+                                        <div class="file-dropzone-icon mx-auto">
+                                            <i class="bi bi-cloud-upload fs-4"></i>
+                                        </div>
+                                        <p class="mb-0 small fw-medium text-primary">Выберите файл или перетащите</p>
+                                        <div id="fileName" class="mt-1 small text-primary fw-medium d-none"></div>
+                                    </div>
+                                    <input type="file" name="icon" id="iconInput" accept="image/*">
+                                </div>
+                                <div class="form-text small mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Оставьте пустым для сохранения текущей иконки
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                {% if section.icon %}
+                                <img src="{{ section.icon.url }}" alt="{{ section.name }}"
+                                     class="icon-preview shadow-sm" id="currentIcon">
+                                {% else %}
+                                <div class="icon-preview d-flex align-items-center justify-content-center bg-light" id="currentIcon">
+                                    <i class="bi bi-image text-secondary fs-2"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">
+                            Рекомендуемый размер: 200×200px, макс. 2MB, форматы: PNG, JPG, SVG
+                        </div>
+                    </div>
+
+                    <!-- Председатель жюри -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-person-badge text-primary"></i>
+                            Председатель жюри
+                        </label>
+                        <div class="position-relative">
+                            <select class="form-select" id="jury_chairman" name="jury_chairman">
+                                <option value="">— Не назначен —</option>
+                                {% for user in all_users %}
+                                <option value="{{ user.id }}" {% if section.jury_chairman.id == user.id %}selected{% endif %}>
+                                    {{ user.get_full_name }} ({{ user.email }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <i class="bi bi-chevron-down position-absolute top-50 end-0 translate-middle-y me-3 text-secondary"></i>
+                        </div>
+                    </div>
+
+                    <!-- Описание секции -->
+                    <div class="form-floating mb-4">
+                        <textarea class="form-control" id="description" name="description"
+                                  placeholder="Описание секции" style="height: 150px;" required>{{ section.description }}</textarea>
+                        <label><i class="bi bi-text-paragraph me-2"></i>Описание секции *</label>
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="d-flex gap-3 justify-content-end mt-4 pt-2 border-top">
+                        <a href="{% url 'conference_admin:manage_sections' %}"
+                           class="btn btn-outline-secondary px-5">
+                            Отмена
+                        </a>
+                        <button type="submit" name="edit_section"
+                                class="btn btn-primary px-5">
+                            <i class="bi bi-check-lg me-2"></i>
+                            Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключаем Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
+<script>
+// ========== ИНИЦИАЛИЗАЦИЯ FLATPICKR ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // Красивый календарь
+    flatpickr(".flatpickr-input", {
+        locale: "ru",
+        dateFormat: "d.m.Y",
+        allowInput: true,
+        theme: "material_blue",
+        animate: true
+    });
+
+    // Превью иконки при загрузке
+    const iconInput = document.getElementById('iconInput');
+    const currentIcon = document.getElementById('currentIcon');
+    const fileName = document.getElementById('fileName');
+
+    if (iconInput) {
+        iconInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileName.textContent = `Выбран: ${file.name}`;
+                fileName.classList.remove('d-none');
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (currentIcon.tagName === 'IMG') {
+                        currentIcon.src = e.target.result;
+                    } else {
+                        const newIcon = document.createElement('img');
+                        newIcon.src = e.target.result;
+                        newIcon.alt = 'Превью';
+                        newIcon.className = 'icon-preview shadow-sm';
+                        newIcon.id = 'currentIcon';
+                        currentIcon.parentNode.replaceChild(newIcon, currentIcon);
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Drag & Drop
+    const dropzone = document.getElementById('iconDropzone');
+    if (dropzone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('dragover');
+            });
+        });
+
+        dropzone.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            iconInput.files = files;
+            iconInput.dispatchEvent(new Event('change'));
+        });
+    }
+});
+</script>
+{% endblock %}

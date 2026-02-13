@@ -1,3 +1,4 @@
+# talks/urls.py
 from django.urls import path
 from . import views
 
@@ -8,4 +9,5 @@ urlpatterns = [
     path('reports/<uuid:report_id>/', views.report_detail, name='report_detail'),
     path('reports/<uuid:report_id>/edit/', views.report_edit, name='report_edit'),
     path('reports/<uuid:report_id>/authors/', views.report_edit_authors, name='report_edit_authors'),
+    path('reports/<uuid:report_id>/resubmit/', views.report_resubmit, name='report_resubmit'),
 ]

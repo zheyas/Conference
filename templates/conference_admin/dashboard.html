@@ -28,7 +28,7 @@
                     <span class="text-2xl">📝</span>
                 </div>
                 <div>
-                    <div class="text-sm text-gray-500">На рецензии</div>
+                    <div class="text-sm text-gray-500">На рассмотрении</div>
                     <div class="text-2xl font-bold">{{ stats.under_review }}</div>
                 </div>
             </div>
@@ -95,19 +95,19 @@
                             <div class="mt-2">
                                 {% if report.status == 'submitted' %}
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    ⚠️ Ожидает рецензента
+                                    ⚠️ Ожидает рассмотрения
                                 </span>
-                                {% else %}
+                                {% elif report.status == 'revisions_required' %}
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                    📝 Нет рецензий
+                                    📝 Требуются доработки
                                 </span>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="flex space-x-2">
-                            <a href="{% url 'conference_admin:create_review' report.id %}"
+                            <a href="{% url 'conference_admin:report_detail' report.id %}"
                                class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
-                                Рецензия
+                                Просмотр
                             </a>
                         </div>
                     </div>
@@ -132,49 +132,13 @@
                 <div class="text-sm text-gray-500">Авторов</div>
             </div>
             <div class="text-center p-4 border border-gray-200 rounded-lg">
-                <div class="text-2xl font-bold text-gray-800">{{ stats.pending_reviews }}</div>
-                <div class="text-sm text-gray-500">Ожидает рецензий</div>
-            </div>
-            <div class="text-center p-4 border border-gray-200 rounded-lg">
                 <div class="text-2xl font-bold text-gray-800">{{ stats.total_certificates }}</div>
                 <div class="text-sm text-gray-500">Сертификатов</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Последние рецензии -->
-    <div class="stat-card">
-        <h2 class="text-lg font-bold mb-4 text-gray-800">Последние рецензии</h2>
-        <div class="space-y-3">
-            {% for review in recent_reviews %}
-            <div class="p-3 border border-gray-200 rounded-lg">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="font-medium">{{ review.reviewer.get_full_name }}</div>
-                        <div class="text-sm text-gray-500">
-                            {{ review.created_at|date:"d.m.Y H:i" }}
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-1 rounded text-xs font-medium
-                            {% if review.status == 'accepted' %}bg-green-100 text-green-800
-                            {% elif review.status == 'rejected' %}bg-red-100 text-red-800
-                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                            {{ review.get_status_display }}
-                        </span>
-                        <a href="{% url 'conference_admin:report_detail' review.report.id %}"
-                           class="text-blue-600 hover:text-blue-800 text-sm">
-                            к докладу →
-                        </a>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-600 truncate">
-                    {{ review.comment_for_author|truncatechars:100 }}
-                </div>
+            <div class="text-center p-4 border border-gray-200 rounded-lg">
+                <div class="text-2xl font-bold text-gray-800">{{ stats.total_sections }}</div>
+                <div class="text-sm text-gray-500">Секций</div>
             </div>
-            {% empty %}
-            <p class="text-gray-500 text-center py-4">Рецензий пока нет</p>
-            {% endfor %}
         </div>
     </div>
 </div>
