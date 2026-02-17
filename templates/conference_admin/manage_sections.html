@@ -232,7 +232,7 @@
         color: #94a3b8;
     }
 
-    /* ========== КАРТОЧКА СЕКЦИИ - 3 В РЯД ========== */
+    /* ========== КАРТОЧКА СЕКЦИИ - ТАБЛИЧНЫЙ ФОРМАТ ========== */
     .section-card {
         background: white;
         border-radius: 20px;
@@ -271,37 +271,28 @@
         transform: scaleX(1);
     }
 
-    /* ========== БЕЙДЖИ ========== */
-    .badge-custom {
-        display: inline-flex;
+    /* ========== КНОПКИ В ОДИН РЯД ========== */
+    .action-buttons {
+        display: flex;
         align-items: center;
-        padding: 0.35rem 0.75rem;
-        border-radius: 50px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 0.3px;
+        gap: 4px;
+        flex-wrap: nowrap;
     }
 
-    .badge-blue {
-        background: linear-gradient(135deg, #cfe2ff, #b6d4fe);
-        color: #084298;
-        border: 1px solid #9ec5fe;
-    }
-
-    /* ========== КНОПКИ ========== */
     .btn-jury,
     .btn-edit,
     .btn-delete {
         border: none;
-        padding: 0.4rem 0.8rem;
+        padding: 0.4rem 0.7rem;
         border-radius: 10px;
         transition: all 0.3s ease;
         color: white;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        white-space: nowrap;
     }
 
     .btn-jury {
@@ -415,6 +406,51 @@
         .stat-value {
             font-size: 1.1rem;
         }
+        .action-buttons {
+            gap: 2px;
+        }
+        .btn-jury,
+        .btn-edit,
+        .btn-delete {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+
+    /* ========== ТАБЛИЧНЫЙ ФОРМАТ ========== */
+    .sections-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    @media (max-width: 992px) {
+        .sections-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sections-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ========== БЕЙДЖИ ========== */
+    .badge-custom {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-blue {
+        background: linear-gradient(135deg, #cfe2ff, #b6d4fe);
+        color: #084298;
+        border: 1px solid #9ec5fe;
     }
 </style>
 {% endblock %}
@@ -484,6 +520,7 @@
                             <i class="bi bi-exclamation-triangle-fill mt-1"></i>
                             <div class="small">
                                 <strong>Ошибка!</strong> Проверьте правильность заполнения.
+                                {{ form.errors }}
                             </div>
                         </div>
                         {% endif %}
@@ -610,107 +647,105 @@
                 {% endif %}
             </div>
 
-            <!-- Список секций - КРАСИВЫЕ КАРТОЧКИ ПО 3 В РЯД -->
+            <!-- Список секций - ТАБЛИЧНЫЙ ФОРМАТ ПО 3 В РЯД -->
             {% if sections %}
-            <div class="row g-3">
+            <div class="sections-grid">
                 {% for section in sections %}
-                <div class="col-xl-4 col-md-6">
-                    <div class="section-card">
-                        <!-- Бейдж статуса -->
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge-custom badge-blue">
-                                <span class="rounded-circle bg-primary me-1" style="width: 6px; height: 6px; display: inline-block;"></span>
-                                Активна
-                            </span>
-                            <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">
-                                {{ section.reports.count }} {{ section.reports.count|pluralize:"доклад,доклада,докладов" }}
-                            </span>
-                        </div>
+                <div class="section-card">
+                    <!-- Бейдж статуса -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge-custom badge-blue">
+                            <span class="rounded-circle bg-primary me-1" style="width: 6px; height: 6px; display: inline-block;"></span>
+                            Активна
+                        </span>
+                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary">
+                            {{ section.reports.count }} {{ section.reports.count|pluralize:"доклад,доклада,докладов" }}
+                        </span>
+                    </div>
 
-                        <!-- Название и иконка -->
-                        <div class="d-flex gap-3 mb-3">
-                            <div class="position-relative flex-shrink-0">
-                                {% if section.icon %}
-                                <img src="{{ section.icon.url }}" alt="{{ section.name }}"
-                                     class="rounded-3 border border-2 border-white shadow-sm"
-                                     style="width: 56px; height: 56px; object-fit: cover;">
-                                {% else %}
-                                <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border border-2 border-white shadow-sm"
-                                     style="width: 56px; height: 56px;">
-                                    <i class="bi bi-images text-secondary fs-3"></i>
-                                </div>
-                                {% endif %}
-                            </div>
-                            <div class="flex-grow-1">
-                                <h5 class="fw-bold mb-1" style="font-size: 1.1rem;">{{ section.name }}</h5>
-                                <div class="d-flex flex-wrap gap-1">
-                                    <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
-                                        <i class="bi bi-calendar3 me-1"></i>
-                                        {{ section.date|date:"d.m.Y" }}
-                                    </span>
-                                    <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
-                                        <i class="bi bi-clock me-1"></i>
-                                        {{ section.time|time:"H:i" }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Место проведения -->
-                        <div class="small text-muted mb-2">
-                            <i class="bi bi-geo-alt me-1"></i>
-                            {{ section.location|truncatechars:30 }}
-                        </div>
-
-                        <!-- Описание (обрезанное) -->
-                        <div class="small text-secondary bg-light bg-opacity-50 p-2 rounded-3 mb-2" style="font-size: 0.8rem;">
-                            {{ section.description|truncatechars:70 }}
-                        </div>
-
-                        <!-- Информация о жюри -->
-                        <div class="mb-2">
-                            {% if section.jury_chairman %}
-                            <div class="d-flex align-items-center mb-1 small">
-                                <i class="bi bi-person-badge me-1" style="color: #6f42c1;"></i>
-                                <span class="text-secondary me-1">Председатель:</span>
-                                <span class="fw-medium">{{ section.jury_chairman.get_short_name }}</span>
+                    <!-- Название и иконка -->
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="position-relative flex-shrink-0">
+                            {% if section.icon %}
+                            <img src="{{ section.icon.url }}" alt="{{ section.name }}"
+                                 class="rounded-3 border border-2 border-white shadow-sm"
+                                 style="width: 56px; height: 56px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border border-2 border-white shadow-sm"
+                                 style="width: 56px; height: 56px;">
+                                <i class="bi bi-images text-secondary fs-3"></i>
                             </div>
                             {% endif %}
-                            {% with jury_count=section.jury_members_list.count %}
-                            {% if jury_count > 0 %}
-                            <div class="d-flex align-items-center small">
-                                <i class="bi bi-people-fill me-1" style="color: #6f42c1;"></i>
-                                <span class="text-secondary me-1">Жюри:</span>
-                                <span class="fw-medium">{{ jury_count }} {{ jury_count|pluralize:"человек,человека,человек" }}</span>
-                            </div>
-                            {% endif %}
-                            {% endwith %}
                         </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1" style="font-size: 1.1rem;">{{ section.name }}</h5>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    {{ section.date|date:"d.m.Y" }}
+                                </span>
+                                <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ section.time|time:"H:i" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <!-- Действия - КНОПКИ УПРАВЛЕНИЯ -->
-                        <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
-                            <a href="{% url 'conference_admin:report_list' %}?section={{ section.id }}"
-                               class="small text-decoration-none d-flex align-items-center gap-1 text-primary">
-                                Все доклады <i class="bi bi-arrow-right-short"></i>
+                    <!-- Место проведения -->
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ section.location|truncatechars:30 }}
+                    </div>
+
+                    <!-- Описание (обрезанное) -->
+                    <div class="small text-secondary bg-light bg-opacity-50 p-2 rounded-3 mb-2" style="font-size: 0.8rem;">
+                        {{ section.description|truncatechars:70 }}
+                    </div>
+
+                    <!-- Информация о жюри -->
+                    <div class="mb-2">
+                        {% if section.jury_chairman %}
+                        <div class="d-flex align-items-center mb-1 small">
+                            <i class="bi bi-person-badge me-1" style="color: #6f42c1;"></i>
+                            <span class="text-secondary me-1">Председатель:</span>
+                            <span class="fw-medium">{{ section.jury_chairman.get_short_name }}</span>
+                        </div>
+                        {% endif %}
+                        {% with jury_count=section.jury_members_list.count %}
+                        {% if jury_count > 0 %}
+                        <div class="d-flex align-items-center small">
+                            <i class="bi bi-people-fill me-1" style="color: #6f42c1;"></i>
+                            <span class="text-secondary me-1">Жюри:</span>
+                            <span class="fw-medium">{{ jury_count }} {{ jury_count|pluralize:"человек,человека,человек" }}</span>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <!-- Действия - КНОПКИ В ОДИН РЯД -->
+                    <div class="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
+                        <a href="{% url 'conference_admin:report_list' %}?section={{ section.id }}"
+                           class="small text-decoration-none d-flex align-items-center gap-1 text-primary">
+                            Доклады <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                        <div class="action-buttons">
+                            <a href="{% url 'conference_admin:manage_section_jury' section_id=section.id %}"
+                               class="btn-jury" title="Управление жюри">
+                                <i class="bi bi-people"></i>
                             </a>
-                            <div class="d-flex gap-1">
-                                <a href="{% url 'conference_admin:manage_section_jury' section_id=section.id %}"
-                                   class="btn-jury" title="Управление жюри">
-                                    <i class="bi bi-people"></i>
-                                </a>
-                                <a href="{% url 'conference_admin:edit_section' section.id %}"
-                                   class="btn-edit" title="Редактировать">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" onsubmit="return confirm('Удалить секцию «{{ section.name }}»?')" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="section_id" value="{{ section.id }}">
-                                    <button type="submit" name="delete_section"
-                                            class="btn-delete" title="Удалить">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
+                            <a href="{% url 'conference_admin:edit_section' section.id %}"
+                               class="btn-edit" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" onsubmit="return confirm('Удалить секцию «{{ section.name }}»?')" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="section_id" value="{{ section.id }}">
+                                <button type="submit" name="delete_section"
+                                        class="btn-delete" title="Удалить">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
