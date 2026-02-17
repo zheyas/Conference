@@ -146,10 +146,9 @@ class Report(models.Model):
     status = models.CharField(
         max_length=20,
         choices=[
-            ('draft', 'Черновик'),
             ('submitted', 'Подано'),
             ('review', 'На рассмотрении'),
-            ('approved', 'Одобрено'),
+            ('approved', 'Допущено до очного тура'),
             ('rejected', 'Отклонено'),
             ('revisions_required', 'Требуются доработки'),
             ('resubmitted', 'Подано повторно'),

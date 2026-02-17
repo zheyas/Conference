@@ -33,7 +33,7 @@ class ReportStatusForm(forms.ModelForm):
         self.fields['status'].choices = [
             ('submitted', 'Подано'),
             ('review', 'На рассмотрении'),
-            ('approved', 'Одобрено'),
+            ('approved', 'Допущено до очного тура'),
             ('rejected', 'Отклонено'),
             ('revisions_required', 'Требуются доработки'),
         ]
