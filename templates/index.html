@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}IT-Весна 2026 - ОГУ - Главная{% endblock %}
+{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ{% else %}IT-Весна{% endif %} - Главная{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
@@ -10,7 +10,7 @@
             <div class="info-badge inline-block mb-6">
                 <span class="font-semibold">Научная конференция • 15-17 мая 2026</span>
             </div>
-            <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">IT-Весна 2026</h1>
+            <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">{% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}</h1>
             <p class="text-2xl mb-6 font-medium" style="color: rgba(255, 255, 255, 0.95);">Студенческая научно-техническая конференция</p>
             <div class="flex flex-wrap gap-8 items-center mb-10" style="color: rgba(255, 255, 255, 0.9);">
                 <div class="flex items-center space-x-3">

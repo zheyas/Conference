@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}IT-Весна 2026 - ОГУ{% endblock %}</title>
+    <title>{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ{% else %}IT-Весна{% endif %}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -207,7 +208,6 @@
             margin-bottom: 20px;
         }
 
-        /* Новые стили для кнопок в верхней полосе */
         .auth-btn {
             padding: 4px 12px;
             border-radius: 20px;
@@ -247,6 +247,62 @@
             color: var(--color-neon);
         }
 
+        /* Круглые иконки контактов */
+        .contact-icon-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(78, 255, 255, 0.1) 0%, rgba(43, 159, 193, 0.1) 100%);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .contact-icon-circle:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, rgba(78, 255, 255, 0.2) 0%, rgba(43, 159, 193, 0.2) 100%);
+            box-shadow: 0 0 15px rgba(78, 255, 255, 0.3);
+        }
+
+        .contact-icon-circle i {
+            font-size: 1rem;
+        }
+
+        .contact-icon-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Маленькие иконки организаторов для футера */
+        .organizer-icon-circle-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(78, 255, 255, 0.1);
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .organizer-icon-circle-small:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(78, 255, 255, 0.3);
+        }
+
+        .organizer-icon-image-small {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
         @media (max-width: 768px) {
             .hero-title {
                 font-size: 2.5rem;
@@ -267,17 +323,48 @@
             <div class="max-w-7xl mx-auto px-6">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-6">
-                        <span class="flex items-center space-x-2">
-                            <span style="color: var(--color-neon);">✉️</span>
-                            <span>conference@osu.ru</span>
-                        </span>
-                        <span class="hidden md:flex items-center space-x-2">
-                            <span style="color: var(--color-neon);">📞</span>
-                            <span>+7 (3532) 37-24-78</span>
-                        </span>
+                        {% for contact in contacts %}
+                            {% if contact.contact_type == 'email' %}
+                            <span class="flex items-center space-x-2">
+                                <span class="contact-icon-circle" style="color: var(--color-neon);">
+                                    {% with icon_data=contact.get_icon_data %}
+                                        {% if icon_data.type == 'bootstrap' %}
+                                            <i class="bi {{ icon_data.class }}"></i>
+                                        {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                                            <img src="{{ icon_data.url }}"
+                                                 alt="{{ contact.title }}"
+                                                 class="contact-icon-image"
+                                                 onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.parentElement.innerHTML='<i class=\'bi bi-image\'></i>';{% endif %}">
+                                        {% endif %}
+                                    {% endwith %}
+                                </span>
+                                <span>{{ contact.value }}</span>
+                            </span>
+                            {% elif contact.contact_type == 'phone' %}
+                            <span class="hidden md:flex items-center space-x-2">
+                                <span class="contact-icon-circle" style="color: var(--color-neon);">
+                                    {% with icon_data=contact.get_icon_data %}
+                                        {% if icon_data.type == 'bootstrap' %}
+                                            <i class="bi {{ icon_data.class }}"></i>
+                                        {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                                            <img src="{{ icon_data.url }}"
+                                                 alt="{{ contact.title }}"
+                                                 class="contact-icon-image"
+                                                 onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.parentElement.innerHTML='<i class=\'bi bi-image\'></i>';{% endif %}">
+                                        {% endif %}
+                                    {% endwith %}
+                                </span>
+                                <span>{{ contact.value }}</span>
+                            </span>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     <div class="flex items-center space-x-4">
-                        <a href="https://osu.ru" class="hover:underline" style="color: var(--color-neon);">Официальный сайт ОГУ</a>
+                        {% for contact in contacts %}
+                            {% if contact.contact_type == 'other' and 'Официальный сайт' in contact.title %}
+                            <a href="{{ contact.value }}" class="hover:underline" style="color: var(--color-neon);">{{ contact.title }}</a>
+                            {% endif %}
+                        {% endfor %}
 
                         <!-- Кнопки авторизации в верхней полосе -->
                         <div class="hidden md:flex items-center space-x-2">
@@ -304,59 +391,58 @@
         </div>
 
         <!-- Header -->
-<header class="w-full sticky top-0 z-50" style="background-color: var(--color-white);">
-    <div class="max-w-7xl mx-auto px-6 py-5">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-4">
-                    <div class="logo-container">
-                        <div class="w-12 h-12 flex items-center justify-center">
-                            <svg class="w-8 h-8" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" />
-                            </svg>
+        <header class="w-full sticky top-0 z-50" style="background-color: var(--color-white);">
+            <div class="max-w-7xl mx-auto px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="logo-container">
+                                <div class="w-12 h-12 flex items-center justify-center">
+                                    <svg class="w-8 h-8" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-black text-xl tracking-tight" style="color: var(--color-dark);">
+                                    ОРЕНБУРГСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ
+                                </div>
+                                <div class="text-sm font-medium" style="color: var(--color-sea);">
+                                    Факультет математики и информационных технологий
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <div class="font-black text-xl tracking-tight" style="color: var(--color-dark);">
-                            ОРЕНБУРГСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ
-                        </div>
-                        <div class="text-sm font-medium" style="color: var(--color-sea);">
-                            Факультет математики и информационных технологий
+
+                    <div class="flex items-center space-x-4">
+                        <nav class="hidden md:flex items-center space-x-8 mr-4">
+                            <a href="{% url 'index' %}" class="nav-link text-base font-semibold" style="color: var(--color-dark);">ГЛАВНАЯ</a>
+                            <a href="{% url 'docs:info' %}" class="nav-link text-base font-semibold" style="color: var(--color-dark);">О КОНФЕРЕНЦИИ</a>
+                            <a href="{% url 'contacts' %}" class="nav-link text-base font-semibold" style="color: var(--color-dark);">КОНТАКТЫ</a>
+                        </nav>
+
+                        <!-- Кнопки для авторизованных пользователей -->
+                        <div class="flex items-center space-x-4">
+                            {% if user.is_authenticated %}
+                            <div class="hidden md:flex items-center space-x-4">
+                                <a href="{% url 'report_list' %}" class="text-gray-700 hover:text-gray-900 font-medium">Мои доклады</a>
+                                <a href="{% url 'report_create' %}" class="btn-neon px-4 py-2 text-sm">Зарегистрировать Работу</a>
+
+                                <!-- Ссылка для администратора конференции -->
+                                {% if user.is_conference_admin %}
+                                <a href="{% url 'conference_admin:dashboard' %}"
+                                   class="bg-purple-600 text-white px-4 py-2 rounded-2xl font-medium text-sm hover:bg-purple-700 flex items-center">
+                                    <span class="mr-2">⚙️</span>
+                                    Управление
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="flex items-center space-x-4">
-                <nav class="hidden md:flex items-center space-x-8 mr-4">
-                    <a href="{% url 'index' %}" class="nav-link text-base font-semibold" style="color: var(--color-dark);">ГЛАВНАЯ</a>
-                    <a href="#" class="nav-link text-base font-semibold" style="color: var(--color-dark);">О КОНФЕРЕНЦИИ</a>
-                    <a href="#" class="nav-link text-base font-semibold" style="color: var(--color-dark);">НОВОСТИ</a>
-                    <a href="#" class="nav-link text-base font-semibold" style="color: var(--color-dark);">КОНТАКТЫ</a>
-                </nav>
-
-                <!-- Кнопки для авторизованных пользователей -->
-                <div class="flex items-center space-x-4">
-                    {% if user.is_authenticated %}
-                    <div class="hidden md:flex items-center space-x-4">
-                        <a href="{% url 'report_list' %}" class="text-gray-700 hover:text-gray-900 font-medium">Мои доклады</a>
-                        <a href="{% url 'report_create' %}" class="btn-neon px-4 py-2 text-sm">Зарегистрировать Работу</a>
-
-                        <!-- Ссылка для администратора конференции -->
-                        {% if user.is_conference_admin %}
-                        <a href="{% url 'conference_admin:dashboard' %}"
-                           class="bg-purple-600 text-white px-4 py-2 rounded-2xl font-medium text-sm hover:bg-purple-700 flex items-center">
-                            <span class="mr-2">⚙️</span>
-                            Управление
-                        </a>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
+        </header>
 
         <!-- Сообщения -->
         {% if messages %}
@@ -381,35 +467,55 @@
                     <div>
                         <h4 class="text-lg font-bold mb-6 academic-border pt-2" style="color: var(--color-neon);">Контактная информация</h4>
                         <div class="space-y-4">
+                            {% for contact in contacts %}
                             <p class="flex items-start space-x-3">
-                                <span style="color: var(--color-neon);">📍</span>
-                                <span>460018, г. Оренбург, пр. Победы, 13</span>
+                                <span class="contact-icon-circle" style="color: var(--color-neon); flex-shrink: 0;">
+                                    {% with icon_data=contact.get_icon_data %}
+                                        {% if icon_data.type == 'bootstrap' %}
+                                            <i class="bi {{ icon_data.class }}"></i>
+                                        {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                                            <img src="{{ icon_data.url }}"
+                                                 alt="{{ contact.title }}"
+                                                 class="contact-icon-image"
+                                                 onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.parentElement.innerHTML='<i class=\'bi bi-image\'></i>';{% endif %}">
+                                        {% endif %}
+                                    {% endwith %}
+                                </span>
+                                <span>{{ contact.value }}</span>
                             </p>
-                            <p class="flex items-start space-x-3">
-                                <span style="color: var(--color-neon);">📧</span>
-                                <span>conference@osu.ru</span>
-                            </p>
-                            <p class="flex items-start space-x-3">
-                                <span style="color: var(--color-neon);">📞</span>
-                                <span>+7 (3532) 37-24-78</span>
-                            </p>
+                            {% endfor %}
                         </div>
                     </div>
+
                     <div>
                         <h4 class="text-lg font-bold mb-6 academic-border pt-2" style="color: var(--color-neon);">Организаторы</h4>
-                        <div class="space-y-3">
-                            <p>Факультет математики и информационных технологий</p>
-                            <p>Студенческое научное общество ОГУ</p>
-                            <p>Научно-исследовательская часть ОГУ</p>
+                        <div class="space-y-4">
+                            {% for organizer in organizers %}
+                            <div class="flex items-center space-x-3">
+                                <span class="organizer-icon-circle-small">
+                                    {% with icon_data=organizer.get_icon_data %}
+                                        {% if icon_data.type == 'bootstrap' %}
+                                            <i class="bi {{ icon_data.class }}" style="color: var(--color-neon); font-size: 0.875rem;"></i>
+                                        {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                                            <img src="{{ icon_data.url }}"
+                                                 alt="{{ organizer.name }}"
+                                                 class="organizer-icon-image-small"
+                                                 onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.src='https://via.placeholder.com/30?text={{ organizer.name|slice:":1" }}';{% endif %}">
+                                        {% endif %}
+                                    {% endwith %}
+                                </span>
+                                <span class="text-sm">{{ organizer.name }}</span>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
+
                     <div>
                         <h4 class="text-lg font-bold mb-6 academic-border pt-2" style="color: var(--color-neon);">Полезные ссылки</h4>
                         <div class="space-y-3">
-                            <a href="https://osu.ru" class="footer-link block">Официальный сайт ОГУ</a>
-                            <a href="https://osu.ru/science" class="footer-link block">Научная деятельность</a>
-                            <a href="https://osu.ru/students" class="footer-link block">Студенческий портал</a>
-                            <a href="https://osu.ru/mit" class="footer-link block">Факультет МИТ</a>
+                            {% for link in useful_links %}
+                            <a href="{{ link.url }}" class="footer-link block">{{ link.title }}</a>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -432,7 +538,7 @@
                         </div>
                         <div class="text-center md:text-right">
                             <div class="text-sm" style="color: #6b7280;">
-                                © 2026 Оренбургский государственный университет. Все права защищены.
+                                © {% now "Y" %} Оренбургский государственный университет. Все права защищены.
                             </div>
                             <div class="flex items-center justify-center md:justify-end mt-4">
                                 <span class="color-circle circle-dark mr-2"></span>

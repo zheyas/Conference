@@ -1,6 +1,6 @@
 # talks/templatetags/custom_filters.py
 from django import template
-
+import os
 register = template.Library()
 
 
@@ -31,12 +31,12 @@ def get_approved_count(reports):
     return sum(1 for report in reports if report.status == "approved")
 
 
-# Удаляем этот фильтр, так как он использует удаленный метод
-# @register.filter
-# def get_total_reviews_count(reports, user):
-#     """Получить общее количество рецензий для всех докладов пользователя - УДАЛЕНО"""
-#     return 0
-
+@register.filter
+def file_extension(value):
+    """Возвращает расширение файла в верхнем регистре"""
+    if value:
+        return os.path.splitext(value.name)[1][1:].upper()
+    return ''
 
 # Добавляем полезные фильтры для работы со статусами
 @register.filter

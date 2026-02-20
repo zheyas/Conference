@@ -1,4 +1,3 @@
-# talks/forms.py
 from django import forms
 from .models import Report, Section
 
@@ -23,6 +22,17 @@ class ReportForm(forms.ModelForm):
         help_text='Презентация в формате PPT, PPTX или PDF'
     )
 
+    # НОВОЕ ПОЛЕ: Архив с фото/видео
+    media_archive = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'input-field',
+            'accept': '.zip,.rar,.7z'
+        }),
+        label='Архив с фото/видео (опционально)',
+        help_text='ZIP или RAR архив с фотографиями и видео (макс. 50MB)'
+    )
+
     abstract = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'input-field',
@@ -35,7 +45,7 @@ class ReportForm(forms.ModelForm):
 
     class Meta:
         model = Report
-        fields = ['title', 'abstract', 'section', 'report_file', 'presentation_file']
+        fields = ['title', 'abstract', 'section', 'report_file', 'presentation_file', 'media_archive']
 
     def clean_report_file(self):
         file = self.cleaned_data.get('report_file')
@@ -58,6 +68,19 @@ class ReportForm(forms.ModelForm):
             allowed_extensions = ['.pdf', '.ppt', '.pptx']
             if not any(file.name.lower().endswith(ext) for ext in allowed_extensions):
                 raise forms.ValidationError('Неподдерживаемый формат файла. Используйте PDF, PPT или PPTX.')
+
+        return file
+
+    def clean_media_archive(self):
+        """Валидация архива с фото/видео"""
+        file = self.cleaned_data.get('media_archive')
+        if file:
+            if file.size > 50 * 1024 * 1024:  # 50MB
+                raise forms.ValidationError('Архив слишком большой. Максимальный размер: 50MB')
+
+            allowed_extensions = ['.zip', '.rar', '.7z']
+            if not any(file.name.lower().endswith(ext) for ext in allowed_extensions):
+                raise forms.ValidationError('Неподдерживаемый формат архива. Используйте ZIP, RAR или 7Z.')
 
         return file
 
@@ -96,9 +119,20 @@ class ReportResubmitForm(forms.ModelForm):
         help_text='Загрузите исправленную версию презентации (если файл был изменен)'
     )
 
+    # НОВОЕ ПОЛЕ для повторной отправки
+    media_archive = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'input-field',
+            'accept': '.zip,.rar,.7z'
+        }),
+        label='Обновленный архив с фото/видео (опционально)',
+        help_text='Загрузите исправленную версию архива (если файл был изменен)'
+    )
+
     class Meta:
         model = Report
-        fields = ['title', 'abstract', 'keywords', 'report_file', 'presentation_file', 'revision_description']
+        fields = ['title', 'abstract', 'keywords', 'report_file', 'presentation_file', 'media_archive', 'revision_description']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'input-field',
@@ -119,16 +153,17 @@ class ReportResubmitForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Делаем поля необязательными при повторной отправке
         self.fields['report_file'].required = False
+        self.fields['media_archive'].required = False
         self.fields['revision_description'].required = True
 
         # Если есть существующий файл, показываем подсказку
         if self.instance and self.instance.pk:
             if self.instance.report_file:
-                self.fields[
-                    'report_file'].help_text = f'Текущий файл: {self.instance.report_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
+                self.fields['report_file'].help_text = f'Текущий файл: {self.instance.report_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
             if self.instance.presentation_file:
-                self.fields[
-                    'presentation_file'].help_text = f'Текущий файл: {self.instance.presentation_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
+                self.fields['presentation_file'].help_text = f'Текущий файл: {self.instance.presentation_file.name}. Оставьте пустым, чтобы сохранить текущий файл.'
+            if self.instance.media_archive:
+                self.fields['media_archive'].help_text = f'Текущий архив: {self.instance.media_archive.name}. Оставьте пустым, чтобы сохранить текущий архив.'
 
     def clean(self):
         cleaned_data = super().clean()

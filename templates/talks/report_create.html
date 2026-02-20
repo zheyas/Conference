@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ - Подача доклада{% else %}IT-Весна - Подача доклада{% endif %}{% endblock %}
+
 {% block content %}
 <style>
-    /* ... остальные стили без изменений ... */
     @keyframes float {
         0%, 100% { transform: translateY(0px) rotate(0deg); }
         50% { transform: translateY(-20px) rotate(5deg); }
@@ -187,7 +188,7 @@
                 Подача доклада
             </h1>
             <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                Примите участие в конференции <span class="font-semibold text-blue-600">IT-Весна 2026</span>
+                Примите участие в конференции <span class="font-semibold text-blue-600">{% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}</span>
             </p>
         </div>
 
@@ -273,6 +274,7 @@
                             id="id_section"
                             required
                             class="section-select">
+                            <option value="">-- Выберите секцию --</option>
                             {% for value, label in form.section.field.choices %}
                                 {% if value %}
                                     <option value="{{ value }}" {% if form.section.value == value %}selected{% endif %}>
@@ -281,8 +283,6 @@
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2">
-                        </div>
                     </div>
                     <p class="mt-3 text-sm text-gray-400">Выберите наиболее подходящую секцию для вашего доклада</p>
                 </div>
@@ -407,6 +407,65 @@
                         </div>
                         {% endif %}
                     </div>
+
+                    <!-- Архив с фото/видео -->
+                    <div class="file-upload-area rounded-2xl p-8 group col-span-1 md:col-span-2">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Архив с фото/видео</h3>
+                                <p class="text-sm text-pink-600 font-medium">Дополнительные материалы</p>
+                            </div>
+                        </div>
+
+                        <label class="block cursor-pointer">
+                            <div class="flex flex-col items-center justify-center text-center">
+                                <div class="w-20 h-20 rounded-full bg-gradient-to-r from-pink-100 to-rose-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <svg class="w-10 h-10 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <span class="text-lg font-medium text-pink-600 mb-2">Нажмите для загрузки</span>
+                                <p class="text-sm text-gray-500 mb-4">Или перетащите архив сюда</p>
+                                <input type="file"
+                                       name="media_archive"
+                                       id="id_media_archive"
+                                       accept=".zip,.rar,.7z"
+                                       class="hidden">
+                                <div class="px-6 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full font-medium hover:shadow-lg transition-shadow cursor-pointer" onclick="document.getElementById('id_media_archive').click()">
+                                    Выбрать архив
+                                </div>
+                            </div>
+                        </label>
+
+                        <div id="mediaArchiveName" class="mt-6 px-4 py-3 bg-white rounded-xl border border-pink-200 hidden">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 text-pink-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-700 truncate"></span>
+                                </div>
+                                <button type="button" class="text-red-500 hover:text-red-700" onclick="clearFile('id_media_archive')">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="mt-4 text-sm text-gray-400 text-center">ZIP, RAR или 7Z (макс. 50 МБ)</p>
+
+                        {% if form.media_archive.errors %}
+                        <div class="mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600">
+                            {{ form.media_archive.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Информационная карточка -->
@@ -518,7 +577,16 @@
 
     function clearFile(inputId) {
         const input = document.getElementById(inputId);
-        const displayId = inputId === 'id_report_file' ? 'reportFileName' : 'presentationFileName';
+        let displayId;
+
+        if (inputId === 'id_report_file') {
+            displayId = 'reportFileName';
+        } else if (inputId === 'id_presentation_file') {
+            displayId = 'presentationFileName';
+        } else if (inputId === 'id_media_archive') {
+            displayId = 'mediaArchiveName';
+        }
+
         const display = document.getElementById(displayId);
 
         if (input) {
@@ -533,6 +601,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         handleFileSelect('id_report_file', 'reportFileName');
         handleFileSelect('id_presentation_file', 'presentationFileName');
+        handleFileSelect('id_media_archive', 'mediaArchiveName');
 
         // Drag and drop
         const fileAreas = document.querySelectorAll('.file-upload-area');
@@ -572,6 +641,11 @@
         {% if form.presentation_file.value %}
             document.getElementById('presentationFileName').querySelector('span').textContent = '{{ form.presentation_file.value.name }}';
             document.getElementById('presentationFileName').classList.remove('hidden');
+        {% endif %}
+
+        {% if form.media_archive.value %}
+            document.getElementById('mediaArchiveName').querySelector('span').textContent = '{{ form.media_archive.value.name }}';
+            document.getElementById('mediaArchiveName').classList.remove('hidden');
         {% endif %}
     });
 </script>

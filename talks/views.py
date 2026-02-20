@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.db import models
 from django.utils import timezone
 
+from core.models import ConferenceInfo, ImportantDate
 from .forms import ReportForm, ReportResubmitForm
 from .models import Report, Section
 from authors.models import Author, AuthorReport, AuthorRole
@@ -14,15 +15,18 @@ from authors.models import Author, AuthorReport, AuthorRole
 
 def index(request):
     """Главная страница"""
-    sections = Section.objects.all()
-    recent_reports = Report.objects.filter(status='approved').order_by('-created_at')[:6]
+
+    sections = Section.objects.all().order_by('name')[:3]  # Последние 3 секции
+
+    # Получаем даты из core
+    conference = ConferenceInfo.objects.filter(is_active=True).first()
+    important_dates = ImportantDate.objects.filter(is_active=True)
 
     return render(request, 'index.html', {
         'sections': sections,
-        'recent_reports': recent_reports,
-        'user': request.user
+        'conference': conference,
+        'important_dates': important_dates,
     })
-
 
 def get_or_create_author_for_user(user):
     """Создать или получить автора для пользователя"""

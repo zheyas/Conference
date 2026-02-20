@@ -457,7 +457,7 @@
                             Админ-панель
                         </div>
                         <div class="text-xs opacity-80 text-cyan-100 mt-1">
-                            IT-Весна 2026
+                            {% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}
                         </div>
                     </div>
                 </div>
@@ -557,7 +557,7 @@
                             v2.0.0
                         </div>
                         <div class="text-xs opacity-40 mt-1">
-                            Конференция IT-Весна 2026
+                            Конференция {% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}
                         </div>
                     </div>
                 </div>
@@ -576,7 +576,7 @@
                             </h1>
                             <p class="text-sm text-gray-500 flex items-center gap-2">
                                 <span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
-                                {% block page_subtitle %}Администрирование конференции IT-Весна 2026{% endblock %}
+                                {% block page_subtitle %}Администрирование конференции {% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}{% endblock %}
                             </p>
                         </div>
 

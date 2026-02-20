@@ -2,6 +2,8 @@
 {% load static %}
 {% load custom_filters %}
 
+{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ - Мои доклады{% else %}IT-Весна - Мои доклады{% endif %}{% endblock %}
+
 {% block content %}
 <style>
     .status-badge {
@@ -283,28 +285,39 @@
                     </div>
 
                     <!-- Информация о файлах -->
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-4">
-                            {% if report.report_file %}
-                            <div class="file-info">
-                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <span>{{ report.report_file.name|slice:"-3:"|upper }}</span>
-                                <span class="text-gray-500">•</span>
-                                <span>{{ report.get_file_size }}</span>
-                            </div>
-                            {% endif %}
-
-                            {% if report.presentation_file %}
-                            <div class="file-info">
-                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                <span>Презентация</span>
-                            </div>
-                            {% endif %}
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        {% if report.report_file %}
+                        <div class="file-info" title="Текст доклада">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span>{{ report.report_file|file_extension }}</span>
+                            <span class="text-gray-500">•</span>
+                            <span>{{ report.get_file_size }}</span>
                         </div>
+                        {% endif %}
+
+                        {% if report.presentation_file %}
+                        <div class="file-info" title="Презентация">
+                            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                            </svg>
+                            <span>{{ report.presentation_file|file_extension }}</span>
+                            <span class="text-gray-500">•</span>
+                            <span>{{ report.get_file_size|cut:"presentation" }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if report.media_archive %}
+                        <div class="file-info" title="Архив с фото/видео">
+                            <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>{{ report.media_archive|file_extension }}</span>
+                            <span class="text-gray-500">•</span>
+                            <span>{{ report.get_file_size }}</span>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Комментарий администратора -->
