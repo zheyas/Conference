@@ -1,15 +1,18 @@
-# talks/models.py
 import os
+import uuid
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-import uuid
+from django.dispatch import receiver
+
 
 def default_date():
     return timezone.now().date()
 
+
 def default_time():
     return timezone.now().time()
+
 
 def report_file_path(instance, filename):
     """Генерирует путь для файла доклада"""
@@ -23,6 +26,13 @@ def section_icon_path(instance, filename):
     ext = filename.split('.')[-1]
     filename = f"section_{uuid.uuid4()}.{ext}"
     return os.path.join('sections/icons', filename)
+
+
+def certificate_file_path(instance, filename):
+    """Генерирует путь для файла грамоты/сертификата"""
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('certificates', str(instance.report.id)[:2], filename)
 
 
 class Section(models.Model):
@@ -46,7 +56,9 @@ class Section(models.Model):
     icon = models.ImageField(
         upload_to=section_icon_path,
         verbose_name='Иконка/логотип секции',
-        help_text='Изображение для секции (рекомендуемый размер: 200x200px)'
+        help_text='Изображение для секции (рекомендуемый размер: 200x200px)',
+        blank=True,
+        null=True
     )
 
     date = models.DateField(
@@ -133,6 +145,14 @@ class Report(models.Model):
         null=True
     )
 
+    media_archive = models.FileField(
+        upload_to=report_file_path,
+        verbose_name='Архив с фото/видео',
+        help_text='ZIP или RAR архив с фотографиями и видео (макс. 50MB)',
+        blank=True,
+        null=True
+    )
+
     # Пользователь, создавший доклад
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -143,16 +163,19 @@ class Report(models.Model):
     )
 
     # Статус
+    STATUS_CHOICES = [
+        ('draft', 'Черновик'),
+        ('submitted', 'Подано'),
+        ('review', 'На рассмотрении'),
+        ('approved', 'Допущено до очного тура'),
+        ('rejected', 'Отклонено'),
+        ('revisions_required', 'Требуются доработки'),
+        ('resubmitted', 'Подано повторно'),
+    ]
+
     status = models.CharField(
         max_length=20,
-        choices=[
-            ('submitted', 'Подано'),
-            ('review', 'На рассмотрении'),
-            ('approved', 'Допущено до очного тура'),
-            ('rejected', 'Отклонено'),
-            ('revisions_required', 'Требуются доработки'),
-            ('resubmitted', 'Подано повторно'),
-        ],
+        choices=STATUS_CHOICES,
         default='draft',
         verbose_name='Статус'
     )
@@ -171,7 +194,7 @@ class Report(models.Model):
         verbose_name='DOI'
     )
 
-    # Комментарии администратора (упрощенная альтернатива рецензиям)
+    # Комментарии администратора
     admin_comment = models.TextField(
         blank=True,
         verbose_name='Комментарий администратора',
@@ -197,24 +220,36 @@ class Report(models.Model):
 
     def get_file_extension(self, file_type='report'):
         """Получить расширение файла"""
-        file_field = self.report_file if file_type == 'report' else self.presentation_file
+        file_map = {
+            'report': self.report_file,
+            'presentation': self.presentation_file,
+            'media': self.media_archive
+        }
+        file_field = file_map.get(file_type)
         if file_field:
             return os.path.splitext(file_field.name)[1][1:].upper()
         return ''
 
     def get_file_size(self, file_type='report'):
         """Получить размер файла в читаемом формате"""
-        file_field = self.report_file if file_type == 'report' else self.presentation_file
+        file_map = {
+            'report': self.report_file,
+            'presentation': self.presentation_file,
+            'media': self.media_archive
+        }
+        file_field = file_map.get(file_type)
         try:
-            size = file_field.size
-            if size < 1024:
-                return f"{size} B"
-            elif size < 1024 * 1024:
-                return f"{size / 1024:.1f} KB"
-            else:
-                return f"{size / (1024 * 1024):.1f} MB"
+            if file_field and hasattr(file_field, 'size'):
+                size = file_field.size
+                if size < 1024:
+                    return f"{size} B"
+                elif size < 1024 * 1024:
+                    return f"{size / 1024:.1f} KB"
+                else:
+                    return f"{size / (1024 * 1024):.1f} MB"
         except:
-            return "N/A"
+            pass
+        return "N/A"
 
     def get_authors(self):
         """Получить всех авторов"""
@@ -253,7 +288,6 @@ class Report(models.Model):
 
     def can_be_resubmitted_by_author(self, user):
         """Может ли автор повторно отправить доклад после доработок"""
-        # Проверяем, является ли пользователь автором или создателем
         is_author_or_creator = (
                 self.created_by == user or
                 self.author_reports.filter(author__user=user).exists()
@@ -262,7 +296,6 @@ class Report(models.Model):
         if not is_author_or_creator:
             return False
 
-        # Проверяем статус доклада
         return self.status == 'revisions_required'
 
     @property
@@ -284,13 +317,6 @@ class Report(models.Model):
             self.reviewed_at = timezone.now()
 
         super().save(*args, **kwargs)
-
-
-def certificate_file_path(instance, filename):
-    """Генерирует путь для файла грамоты/сертификата"""
-    ext = filename.split('.')[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join('certificates', str(instance.report.id)[:2], filename)
 
 
 class Certificate(models.Model):
@@ -374,7 +400,6 @@ class JuryMember(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    # Связь с секцией
     section = models.ForeignKey(
         Section,
         on_delete=models.CASCADE,
@@ -382,7 +407,6 @@ class JuryMember(models.Model):
         verbose_name='Секция'
     )
 
-    # Связь с пользователем (если член жюри - пользователь системы)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -392,7 +416,6 @@ class JuryMember(models.Model):
         verbose_name='Пользователь системы'
     )
 
-    # Данные для произвольного члена жюри (если user не указан)
     last_name = models.CharField(
         max_length=150,
         verbose_name='Фамилия',
@@ -492,3 +515,96 @@ class JuryMember(models.Model):
                     result += f'{self.middle_name[0]}.'
                 return result
             return "Член жюри"
+
+
+# ========== СИГНАЛЫ ДЛЯ УДАЛЕНИЯ ФАЙЛОВ ==========
+# ВСЕ СИГНАЛЫ ДОЛЖНЫ БЫТЬ ПОСЛЕ ОПРЕДЕЛЕНИЯ ВСЕХ КЛАССОВ!
+
+@receiver(models.signals.post_delete, sender=Section)
+def auto_delete_section_icon_on_delete(sender, instance, **kwargs):
+    """Удаляет иконку секции при удалении записи"""
+    import os
+    if instance.icon and os.path.isfile(instance.icon.path):
+        os.remove(instance.icon.path)
+        print(f" Удалена иконка секции: {instance.icon.path}")
+
+
+@receiver(models.signals.pre_save, sender=Section)
+def auto_delete_section_icon_on_change(sender, instance, **kwargs):
+    """Удаляет старую иконку при обновлении секции"""
+    import os
+    if not instance.pk:
+        return False
+    try:
+        old_instance = Section.objects.get(pk=instance.pk)
+    except Section.DoesNotExist:
+        return False
+    if old_instance.icon and old_instance.icon != instance.icon:
+        if os.path.isfile(old_instance.icon.path):
+            os.remove(old_instance.icon.path)
+            print(f" Удалена старая иконка секции: {old_instance.icon.path}")
+
+
+@receiver(models.signals.post_delete, sender=Report)
+def auto_delete_report_files_on_delete(sender, instance, **kwargs):
+    """Удаляет все файлы доклада при удалении записи"""
+    import os
+    if instance.report_file and os.path.isfile(instance.report_file.path):
+        os.remove(instance.report_file.path)
+        print(f" Удален файл доклада: {instance.report_file.path}")
+    if instance.presentation_file and os.path.isfile(instance.presentation_file.path):
+        os.remove(instance.presentation_file.path)
+        print(f" Удалена презентация: {instance.presentation_file.path}")
+    if instance.media_archive and os.path.isfile(instance.media_archive.path):
+        os.remove(instance.media_archive.path)
+        print(f" Удален архив с медиа: {instance.media_archive.path}")
+
+
+@receiver(models.signals.pre_save, sender=Report)
+def auto_delete_report_files_on_change(sender, instance, **kwargs):
+    """Удаляет старые файлы при обновлении (замене)"""
+    import os
+    if not instance.pk:
+        return False
+    try:
+        old_instance = Report.objects.get(pk=instance.pk)
+    except Report.DoesNotExist:
+        return False
+    if old_instance.report_file and old_instance.report_file != instance.report_file:
+        if os.path.isfile(old_instance.report_file.path):
+            os.remove(old_instance.report_file.path)
+            print(f" Удален старый файл доклада: {old_instance.report_file.path}")
+    if old_instance.presentation_file and old_instance.presentation_file != instance.presentation_file:
+        if os.path.isfile(old_instance.presentation_file.path):
+            os.remove(old_instance.presentation_file.path)
+            print(f" Удалена старая презентация: {old_instance.presentation_file.path}")
+    if old_instance.media_archive and old_instance.media_archive != instance.media_archive:
+        if os.path.isfile(old_instance.media_archive.path):
+            os.remove(old_instance.media_archive.path)
+            print(f" Удален старый архив с медиа: {old_instance.media_archive.path}")
+
+
+@receiver(models.signals.post_delete, sender=Certificate)
+def auto_delete_certificate_file_on_delete(sender, instance, **kwargs):
+    """Удаляет файл сертификата при удалении записи"""
+    import os
+    if instance.file and os.path.isfile(instance.file.path):
+        os.remove(instance.file.path)
+        print(f" Удален файл сертификата: {instance.file.path}")
+
+
+@receiver(models.signals.pre_save, sender=Certificate)
+def auto_delete_certificate_file_on_change(sender, instance, **kwargs):
+    """Удаляет старый файл сертификата при обновлении"""
+    import os
+    if not instance.pk:
+        return False
+    try:
+        old_instance = Certificate.objects.get(pk=instance.pk)
+    except Certificate.DoesNotExist:
+        return False
+    if old_instance.file and old_instance.file != instance.file:
+        if os.path.isfile(old_instance.file.path):
+            os.remove(old_instance.file.path)
+            print(f" Удален старый файл сертификата: {old_instance.file.path}")
+            

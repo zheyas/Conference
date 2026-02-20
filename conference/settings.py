@@ -30,16 +30,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     # Third party apps
     'crispy_forms',
     'crispy_bootstrap5',
+    'docs',
+    'core',
 
     # Local apps
     'users',
     'talks',
     'authors',
     'conference_admin',
+
 ]
 
 MIDDLEWARE = [
@@ -65,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.core_context',
             ],
         },
     },

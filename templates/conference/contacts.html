@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ - Контакты{% else %}IT-Весна - Контакты{% endif %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section для страницы контактов -->
+<section class="w-full futuristic-gradient py-16 md:py-20">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">
+            Контакты
+        </h1>
+        <p class="text-xl text-white max-w-3xl mx-auto">
+            Свяжитесь с нами по любым вопросам организации конференции
+        </p>
+    </div>
+</section>
+
+<!-- Основная информация -->
+<section class="w-full py-16" style="background-color: var(--color-white);">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Левая колонка - Контактная информация -->
+            <div>
+                <h2 class="text-3xl font-bold mb-8 section-title" style="color: var(--color-dark);">
+                    Свяжитесь с нами
+                </h2>
+
+                <div class="space-y-6">
+                    {% for contact in contacts %}
+                    <div class="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition-all">
+                        <div class="contact-icon-circle-large flex-shrink-0" style="background: linear-gradient(135deg, rgba(78, 255, 255, 0.15) 0%, rgba(43, 159, 193, 0.15) 100%);">
+                            {% with icon_data=contact.get_icon_data %}
+                                {% if icon_data.type == 'bootstrap' %}
+                                    <i class="bi {{ icon_data.class }} text-2xl" style="color: var(--color-neon);"></i>
+                                {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                                    <img src="{{ icon_data.url }}"
+                                         alt="{{ contact.title }}"
+                                         class="contact-icon-image-large"
+                                         onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.parentElement.innerHTML='<i class=\'bi bi-image text-2xl\' style=\'color: var(--color-neon);\'></i>';{% endif %}">
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg" style="color: var(--color-dark);">{{ contact.title }}</h3>
+                            {% if contact.contact_type == 'email' %}
+                            <a href="mailto:{{ contact.value }}" class="text-gray-600 hover:underline break-all">{{ contact.value }}</a>
+                            {% elif contact.contact_type == 'phone' %}
+                            <a href="tel:{{ contact.value }}" class="text-gray-600 hover:underline">{{ contact.value }}</a>
+                            {% elif contact.contact_type == 'address' %}
+                            <p class="text-gray-600">{{ contact.value }}</p>
+                            {% else %}
+                            <a href="{{ contact.value }}" target="_blank" class="text-gray-600 hover:underline break-all">{{ contact.value }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-500">Контактная информация скоро появится</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Правая колонка - Карта ОГУ -->
+            <div>
+                <h2 class="text-3xl font-bold mb-8 section-title" style="color: var(--color-dark);">
+                    Как нас найти
+                </h2>
+
+                <div class="bg-gray-100 rounded-2xl p-6">
+                    <h3 class="font-bold text-lg mb-4" style="color: var(--color-dark);">
+                        <i class="bi bi-geo-alt-fill text-neon mr-2" style="color: var(--color-neon);"></i>
+                        Главный корпус ОГУ
+                    </h3>
+                    <p class="text-gray-600 mb-4">460018, г. Оренбург, пр. Победы, 13</p>
+
+                    <!-- Карта Яндекса с отметкой ОГУ -->
+                    <div class="rounded-lg overflow-hidden shadow-lg">
+                        <iframe src="https://yandex.ru/map-widget/v1/?ll=55.148013%2C51.395743&mode=search&oid=1030866412&ol=biz&sll=55.148013%2C51.395743&sspn=0.045990%2C0.017096&text=%D0%9E%D1%80%D0%B5%D0%BD%D0%B1%D1%83%D1%80%D0%B3%D1%81%D0%BA%D0%B8%D0%B9%20%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9%20%D1%83%D0%BD%D0%B8%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%82%D0%B5%D1%82&z=17" width="100%" height="350" frameborder="0" allowfullscreen="true" style="border-radius: 12px;"></iframe>
+                    </div>
+
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <i class="bi bi-info-circle mr-2" style="color: var(--color-neon);"></i>
+                        <span>Остановка "ОГУ" (все виды транспорта)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Организаторы -->
+<section class="w-full py-16" style="background: linear-gradient(135deg, #f8fafc 0%, #e9ecef 100%);">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-12 text-center section-title inline-block" style="color: var(--color-dark);">
+            Организаторы конференции
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for organizer in organizers %}
+            <div class="bg-white rounded-2xl p-6 text-center card-shadow">
+                <div class="organizer-icon-circle mx-auto mb-4">
+                    {% with icon_data=organizer.get_icon_data %}
+                        {% if icon_data.type == 'bootstrap' %}
+                            <i class="bi {{ icon_data.class }} text-3xl" style="color: var(--color-neon);"></i>
+                        {% elif icon_data.type == 'image' or icon_data.type == 'url' %}
+                            <img src="{{ icon_data.url }}"
+                                 alt="{{ organizer.name }}"
+                                 class="organizer-icon-image"
+                                 onerror="this.onerror=null; {% if icon_data.fallback %}this.src='{{ icon_data.fallback }}';{% else %}this.src='https://via.placeholder.com/200?text={{ organizer.name|slice:":1" }}';{% endif %}">
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <h3 class="font-bold text-lg mb-2" style="color: var(--color-dark);">{{ organizer.name }}</h3>
+                {% if organizer.description %}
+                <p class="text-gray-600 text-sm mb-3">{{ organizer.description }}</p>
+                {% endif %}
+                {% if organizer.website %}
+                <a href="{{ organizer.website }}" target="_blank" class="inline-block text-sm px-4 py-2 rounded-full" style="background-color: rgba(78, 255, 255, 0.1); color: var(--color-neon);">
+                    <i class="bi bi-box-arrow-up-right mr-1"></i> Сайт
+                </a>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-gray-500 col-span-full text-center">Информация об организаторах скоро появится</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Часто задаваемые вопросы (упрощенно) -->
+<section class="w-full py-16" style="background-color: var(--color-white);">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-12 text-center" style="color: var(--color-dark);">
+            Часто задаваемые вопросы
+        </h2>
+
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button class="w-full text-left p-4 font-semibold flex justify-between items-center hover:bg-gray-50" onclick="toggleFAQ(this)">
+                    <span>Как подать заявку на участие?</span>
+                    <i class="bi bi-chevron-down transition-transform"></i>
+                </button>
+                <div class="p-4 hidden bg-gray-50">
+                    <p class="text-gray-600">Для подачи заявки необходимо зарегистрироваться на сайте, заполнить форму доклада и прикрепить тезисы. После модерации вы получите уведомление на email.</p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-xl overflow-hidden">
+                <button class="w-full text-left p-4 font-semibold flex justify-between items-center hover:bg-gray-50" onclick="toggleFAQ(this)">
+                    <span>Какие требования к оформлению тезисов?</span>
+                    <i class="bi bi-chevron-down transition-transform"></i>
+                </button>
+                <div class="p-4 hidden bg-gray-50">
+                    <p class="text-gray-600">Тезисы должны быть оформлены в формате DOCX, Подробные требования к работам смотрите в информационном письме (раздел О конференции).</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script>
+function toggleFAQ(button) {
+    const content = button.nextElementSibling;
+    const icon = button.querySelector('i');
+
+    content.classList.toggle('hidden');
+    icon.classList.toggle('rotate-180');
+}
+</script>
+
+<style>
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Стили для больших круглых иконок на странице контактов */
+.contact-icon-circle-large {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(78, 255, 255, 0.15) 0%, rgba(43, 159, 193, 0.15) 100%);
+}
+
+.contact-icon-circle-large:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(78, 255, 255, 0.3);
+}
+
+.contact-icon-image-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Стили для карты */
+iframe {
+    border-radius: 12px;
+    min-height: 350px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    iframe {
+        min-height: 300px;
+    }
+}
+    /* Стили для иконок организаторов */
+.organizer-icon-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(78, 255, 255, 0.1) 0%, rgba(43, 159, 193, 0.1) 100%);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 2px solid rgba(78, 255, 255, 0.3);
+}
+
+.organizer-icon-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(78, 255, 255, 0.4);
+    border-color: var(--color-neon);
+}
+
+.organizer-icon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+</style>
+{% endblock %}

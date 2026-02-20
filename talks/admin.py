@@ -108,6 +108,7 @@ class ReportAdmin(admin.ModelAdmin):
         'section',
         'status_badge',
         'authors_count',
+        'files_info',
         'created_by_display',
         'created_at_short'
     ]
@@ -131,7 +132,10 @@ class ReportAdmin(admin.ModelAdmin):
         'updated_at',
         'submitted_at',
         'reviewed_at',
-        'created_by_display'
+        'created_by_display',
+        'report_file_preview',
+        'presentation_file_preview',
+        'media_archive_preview'
     ]
 
     inlines = [AuthorReportInline]
@@ -147,11 +151,29 @@ class ReportAdmin(admin.ModelAdmin):
             )
         }),
 
-        ('Файлы', {
+        ('Файлы доклада', {
             'fields': (
                 'report_file',
-                'presentation_file'
-            )
+                'report_file_preview',
+            ),
+            'classes': ('wide',)
+        }),
+
+        ('Презентация', {
+            'fields': (
+                'presentation_file',
+                'presentation_file_preview',
+            ),
+            'classes': ('wide',)
+        }),
+
+        ('📦 Архив с фото/видео (новое)', {
+            'fields': (
+                'media_archive',
+                'media_archive_preview',
+            ),
+            'classes': ('wide',),
+            'description': 'Загрузите архив с дополнительными материалами: фотографии, видео, демонстрационные файлы.'
         }),
 
         ('Статус и комментарии', {
@@ -187,7 +209,7 @@ class ReportAdmin(admin.ModelAdmin):
             'submitted': ('#dbeafe', '#1e40af'),
             'review': ('#ffedd5', '#9a3412'),
             'approved': ('#d1fae5', '#065f46'),
-            'rejected': ('fee2e2', '#991b1b'),
+            'rejected': ('#fee2e2', '#991b1b'),
             'revisions_required': ('#fef3c7', '#92400e'),
         }
 
@@ -211,6 +233,23 @@ class ReportAdmin(admin.ModelAdmin):
 
     authors_count.short_description = 'Авторы'
 
+    def files_info(self, obj):
+        """Отображение информации о файлах в списке"""
+        icons = []
+
+        if obj.report_file:
+            icons.append('<span title="Доклад" style="color: #3b82f6;">📄</span>')
+        if obj.presentation_file:
+            icons.append('<span title="Презентация" style="color: #8b5cf6;">📝</span>')
+        if obj.media_archive:
+            icons.append('<span title="Архив с медиа" style="color: #ec4899;">📦</span>')
+
+        if icons:
+            return format_html(' '.join(icons))
+        return "—"
+
+    files_info.short_description = 'Файлы'
+
     def created_by_display(self, obj):
         if obj.created_by:
             return format_html(
@@ -227,6 +266,51 @@ class ReportAdmin(admin.ModelAdmin):
 
     created_at_short.short_description = 'Создан'
     created_at_short.admin_order_field = 'created_at'
+
+    def report_file_preview(self, obj):
+        """Превью файла доклада"""
+        if obj.report_file:
+            return format_html(
+                '<a href="{}" target="_blank" style="display: inline-block; '
+                'padding: 5px 10px; background: #3b82f6; color: white; '
+                'border-radius: 5px; text-decoration: none;">📄 Скачать доклад ({} {})</a>',
+                obj.report_file.url,
+                obj.get_file_extension('report'),
+                obj.get_file_size('report')
+            )
+        return "Файл не загружен"
+
+    report_file_preview.short_description = 'Превью доклада'
+
+    def presentation_file_preview(self, obj):
+        """Превью презентации"""
+        if obj.presentation_file:
+            return format_html(
+                '<a href="{}" target="_blank" style="display: inline-block; '
+                'padding: 5px 10px; background: #8b5cf6; color: white; '
+                'border-radius: 5px; text-decoration: none;">📝 Скачать презентацию ({} {})</a>',
+                obj.presentation_file.url,
+                obj.get_file_extension('presentation'),
+                obj.get_file_size('presentation')
+            )
+        return "Файл не загружен"
+
+    presentation_file_preview.short_description = 'Превью презентации'
+
+    def media_archive_preview(self, obj):
+        """Превью архива с медиа"""
+        if obj.media_archive:
+            return format_html(
+                '<a href="{}" target="_blank" style="display: inline-block; '
+                'padding: 5px 10px; background: #ec4899; color: white; '
+                'border-radius: 5px; text-decoration: none;">📦 Скачать архив ({} {})</a>',
+                obj.media_archive.url,
+                obj.get_file_extension('media'),
+                obj.get_file_size('media')
+            )
+        return "Файл не загружен"
+
+    media_archive_preview.short_description = 'Превью архива'
 
     def save_model(self, request, obj, form, change):
         if not obj.created_by:

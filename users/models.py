@@ -174,3 +174,4 @@ class User(AbstractUser):
     def is_jury_member(self):
         """Проверяет, является ли пользователь членом жюри"""
         return self.jury_sections.exists()
+
