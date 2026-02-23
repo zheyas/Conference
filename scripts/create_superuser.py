@@ -4,16 +4,22 @@ import sys
 import django
 import time
 
+# Добавляем путь к корневой директории проекта
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Настройка Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conference.settings')
 
 # Ждем немного, чтобы база данных успела инициализироваться
 time.sleep(2)
 
-django.setup()
+try:
+    django.setup()
+except Exception as e:
+    print(f"❌ Ошибка при настройке Django: {e}")
+    sys.exit(1)
 
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
 from dotenv import load_dotenv
 
 # Загружаем переменные окружения
@@ -26,10 +32,15 @@ def create_superuser():
     """Создает суперпользователя из переменных окружения если его еще нет"""
 
     # Берем данные из .env
-    email = os.getenv('SUPERUSER_EMAIL', 'admin@example.com')
-    password = os.getenv('SUPERUSER_PASSWORD', 'adminpassword')
+    email = os.getenv('SUPERUSER_EMAIL')
+    password = os.getenv('SUPERUSER_PASSWORD')
     first_name = os.getenv('SUPERUSER_FIRST_NAME', 'Admin')
     last_name = os.getenv('SUPERUSER_LAST_NAME', 'User')
+
+    # Проверяем, что email и password заданы
+    if not email or not password:
+        print("⚠️ SUPERUSER_EMAIL или SUPERUSER_PASSWORD не заданы, пропускаем создание суперпользователя")
+        return True
 
     try:
         # Проверяем, существует ли уже пользователь
@@ -48,7 +59,6 @@ def create_superuser():
 
         print(f"✅ Суперпользователь успешно создан:")
         print(f"   Email: {email}")
-        print(f"   Пароль: {password}")
         print(f"   Имя: {first_name} {last_name}")
         return True
 
@@ -135,15 +145,9 @@ if __name__ == '__main__':
     print("🔧 ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ")
     print("=" * 60)
 
-    success = create_superuser() and create_initial_data()
+    create_superuser()
+    create_initial_data()
 
-    if success:
-        print("=" * 60)
-        print("✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА УСПЕШНО")
-        print("=" * 60)
-        sys.exit(0)
-    else:
-        print("=" * 60)
-        print("❌ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА С ОШИБКАМИ")
-        print("=" * 60)
-        sys.exit(1)
+    print("=" * 60)
+    print("✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА")
+    print("=" * 60)
