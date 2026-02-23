@@ -865,26 +865,26 @@
                                     <h4 class="font-bold text-gray-900 text-lg mb-2">
                                         {{ participant.author.get_full_name }}
                                         {% if participant.corresponding_author %}
-                                        <span class="ml-2 text-green-600 text-base" title="Автор для корреспонденции">✉️</span>
+                                        <span class="ml-2 text-green-600 text-base" title="Автор для корреспонденции"></span>
                                         {% endif %}
                                     </h4>
                                     <div class="author-info-container">
                                         <div class="text-sm text-gray-600 space-y-2">
                                             {% if participant.author.organization %}
                                             <div class="author-info-item">
-                                                <span class="icon">🏢</span>
+                                                <span class="icon"></span>
                                                 <span class="org-display scrollable-field">{{ participant.author.organization }}</span>
                                             </div>
                                             {% endif %}
                                             {% if participant.author.email %}
                                             <div class="author-info-item">
-                                                <span class="icon">📧</span>
+                                                <span class="icon"></span>
                                                 <span class="email-display scrollable-field">{{ participant.author.email }}</span>
                                             </div>
                                             {% endif %}
                                             {% if participant.author.academic_degree or participant.author.position %}
                                             <div class="author-info-item">
-                                                <span class="icon">🎓</span>
+                                                <span class="icon"></span>
                                                 <span>
                                                     {% if participant.author.academic_degree %}
                                                         {{ participant.author.academic_degree }}
@@ -1078,7 +1078,7 @@
 
         let infoHTML = `
             <div class="selected-author-field">
-                <span class="icon">👤</span>
+                <span class="icon"></span>
                 <span class="selected-author-value scrollable-field">${name}</span>
             </div>
         `;
@@ -1086,7 +1086,7 @@
         if (email) {
             infoHTML += `
                 <div class="selected-author-field">
-                    <span class="icon">📧</span>
+                    <span class="icon"></span>
                     <span class="selected-author-value scrollable-field">${email}</span>
                 </div>
             `;
@@ -1095,7 +1095,7 @@
         if (org) {
             infoHTML += `
                 <div class="selected-author-field">
-                    <span class="icon">🏢</span>
+                    <span class="icon"></span>
                     <span class="selected-author-value scrollable-field">${org}</span>
                 </div>
             `;
