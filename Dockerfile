@@ -19,7 +19,7 @@ RUN pip install --upgrade pip \
 # Копируем остальной проект в контейнер
 COPY . .
 
-# Создаем директорию для скриптов
+# Создаем директорию для скриптов и базы данных
 RUN mkdir -p /app/scripts /app/db /app/media /app/staticfiles
 
 # Делаем скрипты исполняемыми
@@ -31,7 +31,7 @@ set -e\n\
 echo "Running database migrations..."\n\
 python manage.py migrate\n\
 echo "Creating superuser if not exists..."\n\
-python scripts/create_superuser.py\n\
+python /app/scripts/create_superuser.py\n\
 echo "Starting server..."\n\
 exec python manage.py runserver 0.0.0.0:8000' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
