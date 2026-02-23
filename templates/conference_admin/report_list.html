@@ -107,13 +107,13 @@
                         <td>
                             <div class="flex space-x-1">
                                 {% if report.report_file %}
-                                <span title="Текст доклада" class="text-blue-600">📄</span>
+                                <span title="Текст доклада" class="text-blue-600"></span>
                                 {% endif %}
                                 {% if report.presentation_file %}
-                                <span title="Презентация" class="text-purple-600">🎯</span>
+                                <span title="Презентация" class="text-purple-600"></span>
                                 {% endif %}
                                 {% if report.media_archive %}
-                                <span title="Архив с фото/видео" class="text-pink-600">📦</span>
+                                <span title="Архив с фото/видео" class="text-pink-600"></span>
                                 {% endif %}
                                 {% if not report.report_file and not report.presentation_file and not report.media_archive %}
                                 <span class="text-gray-400">—</span>

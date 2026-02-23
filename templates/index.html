@@ -1,35 +1,43 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ{% else %}IT-Весна{% endif %} - Главная{% endblock %}
+{% block title %}{% if conference_info %}{{ conference_info.title }} - ОГУ - Главная{% else %}IT-Весна - Главная{% endif %}{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <section class="w-full futuristic-gradient py-16 md:py-24">
     <div class="max-w-7xl mx-auto px-6">
         <div class="max-w-4xl">
+            {% if conference_info %}
             <div class="info-badge inline-block mb-6">
-                <span class="font-semibold">Научная конференция • 15-17 мая 2026</span>
+                <span class="font-semibold">
+                    Научная конференция • {{ conference_info.get_dates_display }}
+                </span>
             </div>
-            <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">{% if conference_info %}{{ conference_info.title }}{% else %}IT-Весна{% endif %}</h1>
-            <p class="text-2xl mb-6 font-medium" style="color: rgba(255, 255, 255, 0.95);">Студенческая научно-техническая конференция</p>
+            <h1 class="text-5xl md:text-6xl font-black mb-6 glow-text" style="color: var(--color-neon);">
+                {{ conference_info.title }}
+            </h1>
+            <p class="text-2xl mb-6 font-medium" style="color: rgba(255, 255, 255, 0.95);">
+                {{ conference_info.subtitle }}
+            </p>
             <div class="flex flex-wrap gap-8 items-center mb-10" style="color: rgba(255, 255, 255, 0.9);">
                 <div class="flex items-center space-x-3">
                     <svg class="w-6 h-6" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z" />
                     </svg>
-                    <span class="font-semibold">15-17 мая 2026</span>
+                    <span class="font-semibold">{{ conference_info.get_dates_display }}</span>
                 </div>
                 <div class="flex items-center space-x-3">
                     <svg class="w-6 h-6" style="color: var(--color-neon);" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
-                    <span class="font-semibold">Главный корпус ОГУ</span>
+                    <span class="font-semibold">{{ conference_info.location }}</span>
                 </div>
             </div>
             <p class="text-xl mb-10 leading-relaxed max-w-3xl" style="color: rgba(255, 255, 255, 0.9);">
-                Ежегодная студенческая конференция для молодых исследователей и разработчиков в области информационных технологий.
-                Представьте свои проекты, исследования и инновационные идеи научному сообществу.
+                {{ conference_info.description }}
             </p>
+            {% endif %}
+
             {% if user.is_authenticated %}
             <div class="flex space-x-4">
                 <a href="{% url 'report_list' %}" class="btn-sea px-8 py-3 text-lg">Мои доклады</a>
@@ -125,18 +133,27 @@
                     <div>
                         <h3 class="text-xl font-bold mb-2" style="color: var(--color-neon);">Важные даты</h3>
                         <ul class="space-y-3" style="color: var(--color-light);">
+                            {% for date in important_dates %}
                             <li class="flex items-center space-x-3">
-                                <span class="font-medium" style="color: var(--color-neon);">До 1 апреля 2026</span>
+                                <span class="font-medium" style="color: var(--color-neon);">{{ date.date|date:"d.m.Y" }}</span>
+                                <span>— {{ date.title }}</span>
+                            </li>
+                            {% empty %}
+                            {% if conference_info %}
+                            <li class="flex items-center space-x-3">
+                                <span class="font-medium" style="color: var(--color-neon);">до {{ conference_info.submission_deadline|date:"d.m.Y" }}</span>
                                 <span>— Подача тезисов докладов</span>
                             </li>
                             <li class="flex items-center space-x-3">
-                                <span class="font-medium" style="color: var(--color-neon);">15 апреля 2026</span>
+                                <span class="font-medium" style="color: var(--color-neon);">{{ conference_info.notification_date|date:"d.m.Y" }}</span>
                                 <span>— Уведомление о принятии</span>
                             </li>
                             <li class="flex items-center space-x-3">
-                                <span class="font-medium" style="color: var(--color-neon);">15-17 мая 2026</span>
+                                <span class="font-medium" style="color: var(--color-neon);">{{ conference_info.get_dates_display }}</span>
                                 <span>— Проведение конференции</span>
                             </li>
+                            {% endif %}
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>

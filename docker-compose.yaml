@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    restart: unless-stopped
+    command: >
+      sh -c "
+        python manage.py migrate &&
+        python scripts/create_superuser.py &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - sqlite_data:/app/db
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  # Опционально: nginx для статики (можно добавить позже)
+  nginx:
+    image: nginx:1.25-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - static_data:/app/staticfiles
+      - media_data:/app/media
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
+volumes:
+  sqlite_data:
+  media_data:
+  static_data:

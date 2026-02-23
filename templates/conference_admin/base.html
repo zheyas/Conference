@@ -450,7 +450,7 @@
                 <!-- Логотип -->
                 <div class="flex items-center space-x-3 mb-10 group">
                     <div class="w-12 h-12 rounded-xl sidebar-logo flex items-center justify-center shadow-lg transition-all duration-300 group-hover:shadow-neon">
-                        <span class="text-2xl" style="color: var(--color-neon);">⚙️</span>
+                        <span class="text-2xl" style="color: var(--color-neon);"></span>
                     </div>
                     <div>
                         <div class="font-bold text-lg bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
@@ -473,7 +473,7 @@
                         <nav class="space-y-1">
                             <a href="{% url 'conference_admin:dashboard' %}"
                                class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                                <span>📊</span>
+                                <span></span>
                                 <span>Панель управления</span>
                                 {% if request.resolver_match.url_name == 'dashboard' %}
                                 <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
@@ -491,7 +491,7 @@
                         <nav class="space-y-1">
                             <a href="{% url 'conference_admin:report_list' %}"
                                class="sidebar-link {% if request.resolver_match.url_name == 'report_list' %}active{% endif %}">
-                                <span>📄</span>
+                                <span></span>
                                 <span>Все доклады</span>
                                 {% if request.resolver_match.url_name == 'report_list' %}
                                 <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
@@ -509,7 +509,7 @@
                         <nav class="space-y-1">
                             <a href="{% url 'conference_admin:user_list' %}"
                                class="sidebar-link {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
-                                <span>👤</span>
+                                <span></span>
                                 <span>Пользователи</span>
                                 {% if request.resolver_match.url_name == 'user_list' %}
                                 <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
@@ -527,7 +527,7 @@
                         <nav class="space-y-1">
                             <a href="{% url 'conference_admin:manage_sections' %}"
                                class="sidebar-link {% if request.resolver_match.url_name == 'manage_sections' %}active{% endif %}">
-                                <span>🏷️</span>
+                                <span></span>
                                 <span>Секции</span>
                                 {% if request.resolver_match.url_name == 'manage_sections' %}
                                 <span class="ml-auto w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse-custom"></span>
@@ -541,11 +541,11 @@
                 <div class="mt-12 pt-6 border-t border-gray-700/50">
                     <nav class="space-y-1">
                         <a href="{% url 'index' %}" class="sidebar-link">
-                            <span>🏠</span>
+                            <span></span>
                             <span>На главную</span>
                         </a>
                         <a href="{% url 'logout' %}" class="sidebar-link">
-                            <span>🚪</span>
+                            <span></span>
                             <span>Выйти</span>
                         </a>
                     </nav>
