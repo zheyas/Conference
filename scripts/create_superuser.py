@@ -2,9 +2,14 @@
 import os
 import sys
 import django
+import time
 
 # Настройка Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conference.settings')
+
+# Ждем немного, чтобы база данных успела инициализироваться
+time.sleep(2)
+
 django.setup()
 
 from django.contrib.auth import get_user_model
@@ -30,7 +35,7 @@ def create_superuser():
         # Проверяем, существует ли уже пользователь
         if User.objects.filter(email=email).exists():
             print(f"✅ Суперпользователь {email} уже существует")
-            return
+            return True
 
         # Создаем суперпользователя
         superuser = User.objects.create_superuser(
@@ -45,11 +50,11 @@ def create_superuser():
         print(f"   Email: {email}")
         print(f"   Пароль: {password}")
         print(f"   Имя: {first_name} {last_name}")
+        return True
 
-    except IntegrityError as e:
-        print(f"❌ Ошибка при создании суперпользователя: {e}")
     except Exception as e:
-        print(f"❌ Неожиданная ошибка: {e}")
+        print(f"❌ Ошибка при создании суперпользователя: {e}")
+        return False
 
 
 def create_initial_data():
@@ -118,8 +123,11 @@ def create_initial_data():
                 UsefulLink.objects.create(**data)
             print("✅ Созданы полезные ссылки")
 
+        return True
+
     except Exception as e:
         print(f"❌ Ошибка при создании начальных данных: {e}")
+        return False
 
 
 if __name__ == '__main__':
@@ -127,9 +135,15 @@ if __name__ == '__main__':
     print("🔧 ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ")
     print("=" * 60)
 
-    create_superuser()
-    create_initial_data()
+    success = create_superuser() and create_initial_data()
 
-    print("=" * 60)
-    print("✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА")
-    print("=" * 60)
+    if success:
+        print("=" * 60)
+        print("✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА УСПЕШНО")
+        print("=" * 60)
+        sys.exit(0)
+    else:
+        print("=" * 60)
+        print("❌ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА С ОШИБКАМИ")
+        print("=" * 60)
+        sys.exit(1)

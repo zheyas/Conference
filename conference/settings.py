@@ -22,7 +22,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-58v15$*qkfxb7p=_egss!oio$f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
+# ALLOWED_HOSTS: если переменная окружения задана, используем её (разделяем запятыми),
+# иначе разрешаем локальные хосты и домен Render
+if os.getenv('DJANGO_ALLOWED_HOSTS'):
+    ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS').split(',')
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'conference-rnik.onrender.com']
 
 
 # Application definition
@@ -131,9 +136,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+# Комментируем или удаляем STATICFILES_DIRS, если папки static нет в проекте
+# STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (загруженные пользователями)

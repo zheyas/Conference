@@ -4,22 +4,17 @@ services:
   backend:
     build: .
     restart: unless-stopped
-    command: >
-      sh -c "
-        python manage.py migrate &&
-        python scripts/create_superuser.py &&
-        python manage.py runserver 0.0.0.0:8000
-      "
     volumes:
       - sqlite_data:/app/db
       - media_data:/app/media
       - static_data:/app/staticfiles
     env_file:
       - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=conference.settings
     ports:
       - "8000:8000"
 
-  # Опционально: nginx для статики (можно добавить позже)
   nginx:
     image: nginx:1.25-alpine
     restart: unless-stopped
