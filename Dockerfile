@@ -20,16 +20,23 @@ RUN pip install --upgrade pip \
 COPY . .
 
 # Создаем директорию для скриптов
-RUN mkdir -p /app/scripts
+RUN mkdir -p /app/scripts /app/db /app/media /app/staticfiles
 
 # Делаем скрипты исполняемыми
 RUN chmod +x /app/scripts/*.py 2>/dev/null || true
 
-# Создаем директории для базы данных и медиафайлов
-RUN mkdir -p /app/db /app/media /app/staticfiles
+# Создаем entrypoint скрипт для автоматического запуска миграций и создания суперпользователя
+RUN echo '#!/bin/sh\n\
+set -e\n\
+echo "Running database migrations..."\n\
+python manage.py migrate\n\
+echo "Creating superuser if not exists..."\n\
+python scripts/create_superuser.py\n\
+echo "Starting server..."\n\
+exec python manage.py runserver 0.0.0.0:8000' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Открываем порт для приложения
 EXPOSE 8000
 
-# Запускаем приложение
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Запускаем entrypoint скрипт
+ENTRYPOINT ["/app/entrypoint.sh"]
