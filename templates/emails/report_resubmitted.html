@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #8b5cf6;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .report-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #8b5cf6;
+        }
+        .revision-box {
+            background: #e0f2fe;
+            border: 1px solid #38bdf8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="margin:0;">{{ conference_name }}</h1>
+        <p style="margin:10px 0 0; opacity:0.9;">{{ conference_dates }}</p>
+    </div>
+
+    <div class="content">
+        <div class="status-badge">🔄 ДОКЛАД ОТПРАВЛЕН ПОВТОРНО</div>
+
+        <h2>Уважаемый(ая) {{ author_name }}!</h2>
+
+        <p>Вы успешно отправили исправленную версию доклада. Доклад снова направлен на рассмотрение.</p>
+
+        <div class="report-info">
+            <h3 style="margin-top:0;">Детали доклада:</h3>
+            <p><strong>Название:</strong> {{ report.title }}</p>
+            <p><strong>Секция:</strong> {{ report.section.name|default:"Не указана" }}</p>
+            <p><strong>Дата повторной отправки:</strong> {{ report.resubmitted_at|date:"d.m.Y H:i" }}</p>
+        </div>
+
+        {% if report.revision_description %}
+        <div class="revision-box">
+            <h4 style="margin-top:0; color:#0369a1;">Описание внесенных изменений:</h4>
+            <p style="margin-bottom:0;">{{ report.revision_description|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <p>Оргкомитет рассмотрит исправленную версию в ближайшее время. Следите за уведомлениями.</p>
+
+        <center>
+            <a href="{{ site_url }}/reports/{{ report.id }}/" class="button">Перейти к докладу</a>
+        </center>
+    </div>
+</body>
+</html>

@@ -53,13 +53,16 @@
                 {% endif %}
             </div>
 
-            <div class="flex items-center">
-                <input id="terms" name="terms" type="checkbox" required
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                <label for="terms" class="ml-2 block text-sm text-gray-700">
-                    Я согласен с <a href="#" class="text-blue-600 hover:text-blue-500">правилами конференции</a>
-                </label>
-            </div>
+<div class="flex items-center">
+    <input id="terms" name="terms" type="checkbox" required
+           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+    <label for="terms" class="ml-2 block text-sm text-gray-700">
+        Я согласен с
+        <a href="{% url 'docs:info' %}" class="text-blue-600 hover:text-blue-500" target="_blank">
+            правилами конференции
+        </a>
+    </label>
+</div>
 
             <div>
                 <button type="submit" class="w-full btn-neon py-3 px-4 text-lg font-bold">

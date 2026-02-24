@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.db import models
 from django.utils import timezone
 
+from conference_admin.views import send_status_notification
 from core.models import ConferenceInfo, ImportantDate
 from .forms import ReportForm, ReportResubmitForm
 from .models import Report, Section
@@ -419,12 +420,10 @@ def report_resubmit(request, report_id):
     """Повторная отправка доклада после исправления замечаний"""
     report = get_object_or_404(Report, id=report_id)
 
-    # Проверяем, можно ли отправлять повторно
     if report.status != 'revisions_required':
         messages.error(request, 'Этот доклад не требует доработок или уже был отправлен повторно.')
         return redirect('report_detail', report_id=report.id)
 
-    # Проверяем права доступа
     if not report.can_be_resubmitted_by_author(request.user):
         messages.error(request, 'У вас нет прав для повторной отправки этого доклада.')
         return redirect('report_detail', report_id=report.id)
@@ -432,10 +431,14 @@ def report_resubmit(request, report_id):
     if request.method == 'POST':
         form = ReportResubmitForm(request.POST, request.FILES, instance=report)
         if form.is_valid():
+            old_status = report.status
             report = form.save(commit=False)
             report.status = 'resubmitted'
             report.resubmitted_at = timezone.now()
             report.save()
+
+            # ОТПРАВЛЯЕМ УВЕДОМЛЕНИЕ О ПОВТОРНОЙ ОТПРАВКЕ
+            send_status_notification(report, old_status)
 
             messages.success(request, 'Доклад успешно отправлен повторно на рассмотрение!')
             return redirect('report_detail', report_id=report.id)

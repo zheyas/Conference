@@ -176,12 +176,24 @@ LOGOUT_REDIRECT_URL = 'index'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# Email settings (for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mail.ru'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+SERVER_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+# Для разработки можно использовать консольный вывод
+"""
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+"""
 # Site info
-SITE_NAME = "IT-Весна 2026"
+SITE_NAME = "IT-Весна"
 SITE_DESCRIPTION = "Студенческая научно-техническая конференция"
+SITE_URL = 'https://conference-rnik.onrender.com'  # Замените на ваш домен
 
 # Session settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
