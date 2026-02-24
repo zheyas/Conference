@@ -31,7 +31,7 @@ set -e\n\
 echo "Running database migrations..."\n\
 python manage.py migrate\n\
 echo "Creating superuser if not exists..."\n\
-python /app/scripts/create_superuser.py\n\
+python /app/scripts/create_superuser_from_env.py\n\
 echo "Starting server..."\n\
 exec python manage.py runserver 0.0.0.0:8000' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
