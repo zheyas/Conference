@@ -12,20 +12,42 @@ from .forms import ReportForm, ReportResubmitForm
 from .models import Report, Section
 from authors.models import Author, AuthorReport, AuthorRole
 
+import os
+from django.conf import settings
+
 
 def index(request):
     """Главная страница"""
 
-    sections = Section.objects.all().order_by('name')[:3]  # Последние 3 секции
+    sections = Section.objects.all().order_by('name')[:3]
 
     # Получаем даты из core
     conference = ConferenceInfo.objects.filter(is_active=True).first()
     important_dates = ImportantDate.objects.filter(is_active=True)
 
+    # Диагностика базы данных
+    db_path = settings.DATABASES['default']['NAME']
+    db_exists = os.path.exists(db_path)
+    db_size = os.path.getsize(db_path) if db_exists else 0
+
+    # Форматируем размер
+    if db_size < 1024:
+        size_display = f"{db_size} B"
+    elif db_size < 1024 * 1024:
+        size_display = f"{db_size / 1024:.1f} KB"
+    else:
+        size_display = f"{db_size / (1024 * 1024):.1f} MB"
+
     return render(request, 'index.html', {
         'sections': sections,
         'conference': conference,
         'important_dates': important_dates,
+        'db_info': {
+            'path': db_path,
+            'exists': db_exists,
+            'size': size_display,
+            'size_bytes': db_size
+        }
     })
 
 def get_or_create_author_for_user(user):
