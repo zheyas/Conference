@@ -1,8 +1,9 @@
-# talks/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
+from django.contrib import messages
 from .models import Section, Report, JuryMember
 from authors.models import AuthorReport
+from .utils import send_status_notification  # Импортируем функцию отправки
 
 
 class AuthorReportInline(admin.TabularInline):
@@ -30,6 +31,7 @@ class JuryMemberInline(admin.TabularInline):
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
+    # ... (без изменений) ...
     list_display = ['name', 'date', 'time', 'location', 'jury_chairman_display', 'created_at']
     list_filter = ['date', 'created_at']
     search_fields = ['name', 'description', 'location']
@@ -167,7 +169,7 @@ class ReportAdmin(admin.ModelAdmin):
             'classes': ('wide',)
         }),
 
-        ('📦 Архив с фото/видео (новое)', {
+        ('📦 Архив с фото/видео', {
             'fields': (
                 'media_archive',
                 'media_archive_preview',
@@ -211,6 +213,7 @@ class ReportAdmin(admin.ModelAdmin):
             'approved': ('#d1fae5', '#065f46'),
             'rejected': ('#fee2e2', '#991b1b'),
             'revisions_required': ('#fef3c7', '#92400e'),
+            'resubmitted': ('#dbeafe', '#1e40af'),
         }
 
         bg_color, text_color = status_colors.get(obj.status, ('#f3f4f6', '#374151'))
@@ -313,9 +316,36 @@ class ReportAdmin(admin.ModelAdmin):
     media_archive_preview.short_description = 'Превью архива'
 
     def save_model(self, request, obj, form, change):
+        """
+        Переопределяем save_model для отправки уведомлений при изменении статуса
+        """
+        # Если объект уже существует (изменение)
+        if change:
+            # Получаем старую версию из базы данных
+            old_obj = Report.objects.get(pk=obj.pk)
+            old_status = old_obj.status
+        else:
+            old_status = None
+
+        # Сохраняем объект
         if not obj.created_by:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+        # Если статус изменился и это не черновик, отправляем уведомление
+        if change and old_status != obj.status and obj.status != 'draft':
+            try:
+                # Импортируем функцию отправки (нужно создать отдельный файл utils.py)
+                from .utils import send_status_notification
+                send_status_notification(obj, old_status)
+
+                # Добавляем сообщение об успешной отправке
+                messages.success(request,
+                                 f'Статус изменен с "{old_status}" на "{obj.get_status_display()}". '
+                                 f'Уведомления отправлены авторам.')
+            except Exception as e:
+                messages.warning(request,
+                                 f'Статус изменен, но не удалось отправить уведомления: {e}')
 
 
 @admin.register(JuryMember)

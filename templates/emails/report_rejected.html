@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #dc2626;
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .report-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #dc2626;
+        }
+        .comment-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="margin:0;">{{ conference_name }}</h1>
+        <p style="margin:10px 0 0; opacity:0.9;">{{ conference_dates }}</p>
+    </div>
+
+    <div class="content">
+        <div class="status-badge">❌ ОТКЛОНЕН</div>
+
+        <h2>Уважаемый(ая) {{ author_name }}!</h2>
+
+        <p>К сожалению, ваш доклад <strong>не прошел отбор</strong> для участия в конференции.</p>
+
+        <div class="report-info">
+            <h3 style="margin-top:0;">Детали доклада:</h3>
+            <p><strong>Название:</strong> {{ report.title }}</p>
+            <p><strong>Секция:</strong> {{ report.section.name|default:"Не указана" }}</p>
+            <p><strong>Дата подачи:</strong> {{ report.submitted_at|date:"d.m.Y" }}</p>
+        </div>
+
+        {% if admin_comment %}
+        <div class="comment-box">
+            <h4 style="margin-top:0; color:#856404;">Комментарий организаторов:</h4>
+            <p style="margin-bottom:0;">{{ admin_comment|linebreaks }}</p>
+        </div>
+        {% endif %}
+
+        <p>Благодарим вас за интерес к нашей конференции и надеемся на сотрудничество в будущем.</p>
+
+        <center>
+            <a href="{{ site_url }}" class="button">Перейти на сайт конференции</a>
+        </center>
+    </div>
+</body>
+</html>

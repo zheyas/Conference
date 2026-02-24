@@ -33,4 +33,6 @@ urlpatterns = [
     # Статистика
     path('statistics/', views.statistics, name='statistics'),
     path('statistics/api/', views.statistics_api, name='statistics_api'),
+    path('database/download/', views.download_database, name='download_database'),
+
 ]
