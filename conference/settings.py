@@ -29,6 +29,16 @@ if os.getenv('DJANGO_ALLOWED_HOSTS'):
 else:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'conference-rnik.onrender.com']
 
+# CSRF доверенные источники - важно для Render
+CSRF_TRUSTED_ORIGINS = [
+    'https://conference-rnik.onrender.com',
+    'http://conference-rnik.onrender.com',
+]
+
+# Добавляем из переменной окружения если есть
+if os.getenv('CSRF_TRUSTED_ORIGINS'):
+    CSRF_TRUSTED_ORIGINS.extend(os.getenv('CSRF_TRUSTED_ORIGINS').split(','))
+
 
 # Application definition
 
