@@ -59,7 +59,7 @@
                 </div>
             </div>
 
-            <!-- Правая колонка - Карта ОГУ -->
+            <!-- Правая колонка - Карта Института математики и информационных технологий -->
             <div>
                 <h2 class="text-3xl font-bold mb-8 section-title" style="color: var(--color-dark);">
                     Как нас найти
@@ -68,17 +68,30 @@
                 <div class="bg-gray-100 rounded-2xl p-6">
                     <h3 class="font-bold text-lg mb-4" style="color: var(--color-dark);">
                         <i class="bi bi-geo-alt-fill text-neon mr-2" style="color: var(--color-neon);"></i>
-                        Главный корпус ОГУ
+                        Институт математики и информационных технологий
                     </h3>
-                    <p class="text-gray-600 mb-4">460018, г. Оренбург, пр. Победы, 13</p>
+                    <p class="text-gray-600 mb-4">460018, г. Оренбург, пр. Победы, 13к20</p>
 
-                    <!-- Карта Яндекса с отметкой ОГУ -->
-                    <div class="rounded-lg overflow-hidden shadow-lg">
-                        <iframe src="https://yandex.ru/map-widget/v1/?ll=55.148013%2C51.395743&mode=search&oid=1030866412&ol=biz&sll=55.148013%2C51.395743&sspn=0.045990%2C0.017096&text=%D0%9E%D1%80%D0%B5%D0%BD%D0%B1%D1%83%D1%80%D0%B3%D1%81%D0%BA%D0%B8%D0%B9%20%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9%20%D1%83%D0%BD%D0%B8%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%82%D0%B5%D1%82&z=17" width="100%" height="350" frameborder="0" allowfullscreen="true" style="border-radius: 12px;"></iframe>
-                    </div>
+                    <!-- Карта Яндекса с отметкой на 20 корпусе ОГУ (Институт математики и информационных технологий) -->
+
+<!-- Карта Яндекса с отметкой на 20 корпусе ОГУ (Институт математики и информационных технологий) -->
+<div class="rounded-lg overflow-hidden shadow-lg">
+    <iframe src="https://yandex.ru/map-widget/v1/?ll=55.108022%2C51.778615&z=17&l=map&pt=55.108022%2C51.778615%2Cpm2rdm"
+            width="100%"
+            height="400"
+            frameborder="0"
+            allowfullscreen="true"
+            style="border-radius: 12px;">
+    </iframe>
+</div>
+
 
                     <div class="mt-4 flex items-center text-sm text-gray-500">
                         <i class="bi bi-info-circle mr-2" style="color: var(--color-neon);"></i>
+                        <span>20 учебный корпус ОГУ (Институт математики и информационных технологий)</span>
+                    </div>
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <i class="bi bi-bus-front mr-2" style="color: var(--color-neon);"></i>
                         <span>Остановка "ОГУ" (все виды транспорта)</span>
                     </div>
                 </div>
@@ -201,16 +214,18 @@ function toggleFAQ(button) {
 /* Стили для карты */
 iframe {
     border-radius: 12px;
-    min-height: 350px;
+    min-height: 400px;
+    width: 100%;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
     iframe {
-        min-height: 300px;
+        min-height: 350px;
     }
 }
-    /* Стили для иконок организаторов */
+
+/* Стили для иконок организаторов */
 .organizer-icon-circle {
     width: 100px;
     height: 100px;
