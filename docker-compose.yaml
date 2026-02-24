@@ -5,13 +5,12 @@ services:
     build: .
     restart: unless-stopped
     volumes:
-      - sqlite_data:/app/db
-      - media_data:/app/media
-      - static_data:/app/staticfiles
+      - sqlite_data:/app/db          # Том для базы данных
+      - media_data:/app/media         # Том для загруженных файлов
+      - static_data:/app/staticfiles  # Том для статических файлов
+      - backup_data:/app/db_backups   # Том для резервных копий
     env_file:
       - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=conference.settings
     ports:
       - "8000:8000"
 
@@ -28,6 +27,7 @@ services:
       - backend
 
 volumes:
-  sqlite_data:
-  media_data:
-  static_data:
+  sqlite_data:        # Именованный том для SQLite
+  media_data:         # Именованный том для медиафайлов
+  static_data:        # Именованный том для статики
+  backup_data:        # Именованный том для бэкапов
