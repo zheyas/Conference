@@ -83,6 +83,7 @@ pip install -r requirements.txt
 
 ```bash
 python manage.py migrate
+python manage.py seed_demo_data
 python manage.py runserver или docker-compose up
 ```
 
@@ -167,6 +168,9 @@ docker-compose exec backend ls -la /app/db_backups/
 | `EMAIL_HOST_USER` | Email для отправки уведомлений | `it-spring.osu@mail.ru`   |
 | `EMAIL_HOST_PASSWORD` | Пароль приложения для email | `app-password`            |
 | `DEFAULT_FROM_EMAIL` | Email отправителя | `it-spring.osu@mail.ru`   |
+| `SEED_DEMO_DATA` | Автоматически добавлять демо-данные при старте (по умолчанию включено при `DEBUG=True`) | `True` / `False` |
+
+При первом запуске пустой базы команда заполнит страницу конференции, секции, состав жюри, тестовых участников и доклады с PDF-файлами. Повторные запуски не создают дубликаты. Тестовые учетные записи используют адреса `@example.test` и пароли для них не заданы. В production демо-наполнение по умолчанию выключено; включить его можно через `SEED_DEMO_DATA=True`.
 
 
 
@@ -180,4 +184,3 @@ docker-compose exec backend ls -la /app/db_backups/
 ## Тестовый стенд
 
 https://conference-rnik.onrender.com
-

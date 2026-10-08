@@ -11,6 +11,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-58v15$*qkfxb7p=_egss!oio$f
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+# Demo records are useful in local development; production can opt in explicitly.
+SEED_DEMO_DATA = os.getenv('SEED_DEMO_DATA', 'True' if DEBUG else 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 

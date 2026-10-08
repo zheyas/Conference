@@ -38,6 +38,8 @@ if [ ! -f /app/db/db.sqlite3 ]; then\n\
 fi\n\
 echo " Применение миграций..."\n\
 python manage.py migrate\n\
+echo " Заполнение начальными данными..."\n\
+python manage.py seed_demo_data\n\
 echo " Создание суперпользователя..."\n\
 python scripts/create_superuser_from_env.py\n\
 echo " Настройка автоматических бэкапов..."\n\
